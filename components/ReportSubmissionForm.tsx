@@ -6,16 +6,17 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertCircle, Loader2, Send } from 'lucide-react'
-import api from '@/lib/api'
+import { orgApi } from '@/lib/api-helpers'
 import { Indicator } from '@/lib/types'
 
 interface ReportSubmissionFormProps {
   projectId: string
   indicatorId?: string
   onSuccess?: () => void
+  orgId?: string
 }
 
-export function ReportSubmissionForm({ projectId, indicatorId, onSuccess }: ReportSubmissionFormProps) {
+export function ReportSubmissionForm({ projectId, indicatorId, onSuccess, orgId }: ReportSubmissionFormProps) {
   const [indicators, setIndicators] = useState<Indicator[]>([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -41,9 +42,13 @@ export function ReportSubmissionForm({ projectId, indicatorId, onSuccess }: Repo
   }, [projectId])
 
   const fetchIndicators = async () => {
+    if (!orgId) {
+      console.error('Organization ID is required')
+      return
+    }
     try {
       setLoading(true)
-      const response = await api.get(`/indicators?projectId=${projectId}`)
+      const response = await orgApi.get(orgId, `indicators?projectId=${projectId}`)
       setIndicators(response.data)
       if (indicatorId) {
         setFormData(prev => ({ ...prev, indicatorId }))
@@ -85,7 +90,11 @@ export function ReportSubmissionForm({ projectId, indicatorId, onSuccess }: Repo
       // For quantitative indicators, use the numeric value field
       const isTextIndicator = selectedIndicator && (selectedIndicator.type === 'qualitative' || selectedIndicator.unit === 'text')
       
-      await api.post('/reports', {
+      if (!orgId) {
+        console.error('Organization ID is required')
+        return
+      }
+      await orgApi.post(orgId, 'reports', {
         indicatorId: formData.indicatorId,
         projectId,
         value: isTextIndicator ? undefined : parseFloat(formData.value),

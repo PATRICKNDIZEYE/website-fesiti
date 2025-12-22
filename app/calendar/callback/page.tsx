@@ -1,10 +1,12 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Loader2, CheckCircle2, XCircle } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
-import api from '@/lib/api'
+import { orgApi } from '@/lib/api-helpers'
 
 export default function GoogleCalendarCallbackPage() {
   const router = useRouter()
@@ -14,31 +16,48 @@ export default function GoogleCalendarCallbackPage() {
 
   useEffect(() => {
     const code = searchParams.get('code')
+    const orgId = localStorage.getItem('currentOrgId') || 
+      (() => {
+        const userStr = localStorage.getItem('user')
+        if (userStr) {
+          try {
+            const user = JSON.parse(userStr)
+            return user.organizationId
+          } catch (e) {
+            return null
+          }
+        }
+        return null
+      })()
 
-    if (code) {
-      handleOAuthCallback(code)
+    if (code && orgId) {
+      handleOAuthCallback(code, orgId)
     } else {
       setStatus('error')
-      setMessage('Missing authorization code')
+      setMessage('Missing authorization code or organization ID')
       setTimeout(() => {
-        router.push('/calendar')
+        if (orgId) {
+          router.push(`/org/${orgId}/calendar`)
+        } else {
+          router.push('/login')
+        }
       }, 2000)
     }
   }, [searchParams, router])
 
-  const handleOAuthCallback = async (code: string) => {
+  const handleOAuthCallback = async (code: string, orgId: string) => {
     try {
-      await api.post('/calendar/google-oauth-callback', { code })
+      await orgApi.post(orgId, 'calendar/google-oauth-callback', { code })
       setStatus('success')
       setMessage('Google Calendar connected successfully! Redirecting...')
       setTimeout(() => {
-        router.push('/calendar')
+        router.push(`/org/${orgId}/calendar`)
       }, 1500)
     } catch (error: any) {
       setStatus('error')
       setMessage(error.response?.data?.message || 'Failed to connect Google Calendar')
       setTimeout(() => {
-        router.push('/calendar')
+        router.push(`/org/${orgId}/calendar`)
       }, 3000)
     }
   }

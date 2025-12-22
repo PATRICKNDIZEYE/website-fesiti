@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
+import { getTheme, setTheme, initTheme } from '@/lib/theme'
 import {
   BarChart,
   Bar,
@@ -22,7 +23,8 @@ import {
   ScatterChart,
   Scatter,
 } from 'recharts'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Sun, Moon } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 interface Chart {
   id: string
@@ -54,12 +56,23 @@ export default function SharedVisualizationPage() {
   const [charts, setCharts] = useState<Chart[]>([])
   const [chartData, setChartData] = useState<Record<string, any>>({})
   const [projectName, setProjectName] = useState<string>('')
+  const [theme, setThemeState] = useState<'light' | 'dark'>('light')
 
   useEffect(() => {
+    // Initialize theme
+    initTheme()
+    setThemeState(getTheme())
+    
     if (projectId && shareId) {
       loadSharedCharts()
     }
   }, [projectId, shareId])
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'dark' ? 'light' : 'dark'
+    setTheme(newTheme)
+    setThemeState(newTheme)
+  }
 
   const loadSharedCharts = async () => {
     try {
@@ -169,7 +182,7 @@ export default function SharedVisualizationPage() {
 
     if (chart.displayType === 'line' || chart.displayType === 'area') {
       const ChartComponent = chart.displayType === 'line' ? LineChart : AreaChart
-      const DataComponent = chart.displayType === 'line' ? Line : Area
+      const isLine = chart.displayType === 'line'
       
       return (
         <div>
@@ -197,25 +210,53 @@ export default function SharedVisualizationPage() {
                 }}
               />
               <Legend />
-              <DataComponent 
-                type="monotone" 
-                dataKey="target" 
-                stroke={targetColor} 
-                strokeWidth={2}
-                strokeDasharray="8 4" 
-                name="Target" 
-                dot={{ fill: targetColor, r: 4 }}
-              />
-              <DataComponent 
-                type="monotone" 
-                dataKey="actual" 
-                stroke={progressColor} 
-                strokeWidth={3}
-                fill={progressColor} 
-                fillOpacity={0.3} 
-                name="Actual Progress"
-                dot={{ fill: progressColor, r: 5 }}
-              />
+              {isLine ? (
+                <>
+                  <Line 
+                    type="monotone" 
+                    dataKey="target" 
+                    stroke={targetColor} 
+                    strokeWidth={2}
+                    strokeDasharray="8 4" 
+                    name="Target" 
+                    dot={{ fill: targetColor, r: 4 }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="actual" 
+                    stroke={progressColor} 
+                    strokeWidth={3}
+                    fill={progressColor} 
+                    fillOpacity={0.3} 
+                    name="Actual Progress"
+                    dot={{ fill: progressColor, r: 5 }}
+                  />
+                </>
+              ) : (
+                <>
+                  <Area 
+                    type="monotone" 
+                    dataKey="target" 
+                    stroke={targetColor} 
+                    strokeWidth={2}
+                    strokeDasharray="8 4" 
+                    name="Target" 
+                    dot={{ fill: targetColor, r: 4 }}
+                    fill={targetColor}
+                    fillOpacity={0.1}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="actual" 
+                    stroke={progressColor} 
+                    strokeWidth={3}
+                    fill={progressColor} 
+                    fillOpacity={0.3} 
+                    name="Actual Progress"
+                    dot={{ fill: progressColor, r: 5 }}
+                  />
+                </>
+              )}
             </ChartComponent>
           </ResponsiveContainer>
         </div>
@@ -301,7 +342,7 @@ export default function SharedVisualizationPage() {
 
     if (chart.displayType === 'line' || chart.displayType === 'area') {
       const ChartComponent = chart.displayType === 'line' ? LineChart : AreaChart
-      const DataComponent = chart.displayType === 'line' ? Line : Area
+      const isLine = chart.displayType === 'line'
       
       return (
         <ResponsiveContainer {...commonProps}>
@@ -318,7 +359,11 @@ export default function SharedVisualizationPage() {
               }}
             />
             <Legend />
-            <DataComponent type="monotone" dataKey="progress" stroke={chart.color} fill={chart.color} fillOpacity={0.6} />
+            {isLine ? (
+              <Line type="monotone" dataKey="progress" stroke={chart.color} fill={chart.color} fillOpacity={0.6} />
+            ) : (
+              <Area type="monotone" dataKey="progress" stroke={chart.color} fill={chart.color} fillOpacity={0.6} />
+            )}
           </ChartComponent>
         </ResponsiveContainer>
       )
@@ -502,7 +547,7 @@ export default function SharedVisualizationPage() {
 
     if (chart.displayType === 'line' || chart.displayType === 'area') {
       const ChartComponent = chart.displayType === 'line' ? LineChart : AreaChart
-      const DataComponent = chart.displayType === 'line' ? Line : Area
+      const isLine = chart.displayType === 'line'
       
       return (
         <ResponsiveContainer {...commonProps}>
@@ -519,7 +564,11 @@ export default function SharedVisualizationPage() {
               }}
             />
             <Legend />
-            <DataComponent type="monotone" dataKey="value" stroke={chart.color} fill={chart.color} fillOpacity={0.6} />
+            {isLine ? (
+              <Line type="monotone" dataKey="value" stroke={chart.color} fill={chart.color} fillOpacity={0.6} />
+            ) : (
+              <Area type="monotone" dataKey="value" stroke={chart.color} fill={chart.color} fillOpacity={0.6} />
+            )}
           </ChartComponent>
         </ResponsiveContainer>
       )
@@ -650,7 +699,7 @@ export default function SharedVisualizationPage() {
 
     if (chart.displayType === 'line' || chart.displayType === 'area') {
       const ChartComponent = chart.displayType === 'line' ? LineChart : AreaChart
-      const DataComponent = chart.displayType === 'line' ? Line : Area
+      const isLine = chart.displayType === 'line'
       
       return (
         <ResponsiveContainer {...commonProps}>
@@ -667,7 +716,11 @@ export default function SharedVisualizationPage() {
               }}
             />
             <Legend />
-            <DataComponent type="monotone" dataKey="progress" stroke={chart.color} fill={chart.color} fillOpacity={0.6} />
+            {isLine ? (
+              <Line type="monotone" dataKey="progress" stroke={chart.color} fill={chart.color} fillOpacity={0.6} />
+            ) : (
+              <Area type="monotone" dataKey="progress" stroke={chart.color} fill={chart.color} fillOpacity={0.6} />
+            )}
           </ChartComponent>
         </ResponsiveContainer>
       )
@@ -758,7 +811,7 @@ export default function SharedVisualizationPage() {
 
     if (chart.displayType === 'line' || chart.displayType === 'area') {
       const ChartComponent = chart.displayType === 'line' ? LineChart : AreaChart
-      const DataComponent = chart.displayType === 'line' ? Line : Area
+      const isLine = chart.displayType === 'line'
       
       return (
         <ResponsiveContainer {...commonProps}>
@@ -775,7 +828,11 @@ export default function SharedVisualizationPage() {
               }}
             />
             <Legend />
-            <DataComponent type="monotone" dataKey="progress" stroke={chart.color} fill={chart.color} fillOpacity={0.6} />
+            {isLine ? (
+              <Line type="monotone" dataKey="progress" stroke={chart.color} fill={chart.color} fillOpacity={0.6} />
+            ) : (
+              <Area type="monotone" dataKey="progress" stroke={chart.color} fill={chart.color} fillOpacity={0.6} />
+            )}
           </ChartComponent>
         </ResponsiveContainer>
       )
@@ -1004,7 +1061,7 @@ export default function SharedVisualizationPage() {
 
     if (chart.displayType === 'line' || chart.displayType === 'area') {
       const ChartComponent = chart.displayType === 'line' ? LineChart : AreaChart
-      const DataComponent = chart.displayType === 'line' ? Line : Area
+      const isLine = chart.displayType === 'line'
       
       return (
         <ResponsiveContainer {...commonProps}>
@@ -1021,7 +1078,11 @@ export default function SharedVisualizationPage() {
               }}
             />
             <Legend />
-            <DataComponent type="monotone" dataKey="average" stroke={chart.color} fill={chart.color} fillOpacity={0.6} name="Average Value" />
+            {isLine ? (
+              <Line type="monotone" dataKey="average" stroke={chart.color} fill={chart.color} fillOpacity={0.6} name="Average Value" />
+            ) : (
+              <Area type="monotone" dataKey="average" stroke={chart.color} fill={chart.color} fillOpacity={0.6} name="Average Value" />
+            )}
           </ChartComponent>
         </ResponsiveContainer>
       )
@@ -1118,6 +1179,23 @@ export default function SharedVisualizationPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Theme Toggle Button - Fixed position */}
+      <div className="fixed top-4 right-4 z-50">
+        <Button
+          onClick={toggleTheme}
+          variant="outline"
+          size="icon"
+          className="bg-background border-border hover:bg-accent"
+          aria-label="Toggle theme"
+        >
+          {theme === 'dark' ? (
+            <Sun className="h-5 w-5 text-foreground" />
+          ) : (
+            <Moon className="h-5 w-5 text-foreground" />
+          )}
+        </Button>
+      </div>
+
       <div className="container mx-auto px-4 py-8">
         {projectName && (
           <div className="mb-6">

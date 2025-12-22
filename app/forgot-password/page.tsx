@@ -83,7 +83,7 @@ export default function ForgotPasswordPage() {
           <CardHeader className="space-y-1 pb-4">
             <CardTitle className="text-2xl font-bold text-foreground">Reset Password</CardTitle>
             <CardDescription className="text-muted-foreground">
-              We'll send you a link to reset your password
+              We&apos;ll send you a link to reset your password
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -92,7 +92,7 @@ export default function ForgotPasswordPage() {
                 <Alert className="bg-gold-500/20 border-gold-500/30">
                   <CheckCircle2 className="h-4 w-4 text-gold-500" />
                   <AlertDescription className="text-foreground">
-                    If an account with that email exists, we've sent a password reset link.
+                    If an account with that email exists, we&apos;ve sent a password reset link.
                   </AlertDescription>
                 </Alert>
                 {resetUrl && process.env.NODE_ENV === 'development' && (

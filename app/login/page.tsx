@@ -44,7 +44,14 @@ export default function LoginPage() {
       const response = await authService.login(email, password)
       localStorage.setItem('token', response.access_token)
       localStorage.setItem('user', JSON.stringify(response.user))
-      router.push('/dashboard')
+      
+      // Redirect to organization dashboard
+      if (response.user.organizationId) {
+        router.push(`/org/${response.user.organizationId}/dashboard`)
+      } else {
+        // Fallback if no organizationId (shouldn't happen with new multi-tenant setup)
+        router.push('/dashboard')
+      }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Invalid email or password')
     } finally {
@@ -196,7 +203,7 @@ export default function LoginPage() {
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             <div className="text-sm text-center text-muted-foreground">
-              Don't have an account?{' '}
+              Don&apos;t have an account?{' '}
               <Link href="/register" className="text-gold-500 hover:text-gold-600 font-medium">
                 Create account
               </Link>

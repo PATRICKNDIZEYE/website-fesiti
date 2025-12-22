@@ -26,7 +26,7 @@ export default function NotFound() {
           </CardHeader>
           <CardContent className="text-center space-y-4">
             <p className="text-gray-600 text-lg">
-              The page you are looking for doesn't exist or has been moved.
+              The page you are looking for doesn&apos;t exist or has been moved.
             </p>
             <p className="text-sm text-gray-500">
               Please check the URL or return to the homepage.

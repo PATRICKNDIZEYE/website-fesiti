@@ -27,7 +27,7 @@ export function TermsModal({ open, onOpenChange }: TermsModalProps) {
           <section>
             <h3 className="text-foreground font-semibold mb-2">1. Acceptance of Terms</h3>
             <p>
-              By accessing and using the PM Tool platform ("Service"), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
+              By accessing and using the PM Tool platform (&quot;Service&quot;), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
             </p>
           </section>
 

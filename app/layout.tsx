@@ -4,6 +4,7 @@ import './globals.css'
 import { Providers } from './providers'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import { LayoutProvider } from '@/contexts/LayoutContext'
+import { OrganizationProvider } from '@/contexts/OrganizationContext'
 
 const poppins = Poppins({ 
   subsets: ['latin'],
@@ -27,7 +28,9 @@ export default function RootLayout({
       <body className={`${poppins.variable} font-sans antialiased`}>
         <ThemeProvider>
           <LayoutProvider>
-            <Providers>{children}</Providers>
+            <OrganizationProvider>
+              <Providers>{children}</Providers>
+            </OrganizationProvider>
           </LayoutProvider>
         </ThemeProvider>
       </body>

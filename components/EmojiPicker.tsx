@@ -32,7 +32,7 @@ export function EmojiPickerComponent({ onEmojiClick }: EmojiPickerProps) {
             onEmojiClick(emojiData.emoji)
             setOpen(false)
           }}
-          theme="dark"
+          theme={'dark' as any}
         />
       </PopoverContent>
     </Popover>

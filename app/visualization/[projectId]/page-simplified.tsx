@@ -233,9 +233,11 @@ export default function ProjectVisualizationPage() {
       })
     })
 
+    const commonProps = { width: '100%', height: (chart as any).height || 400 }
+
     if (chart.displayType === 'line' || chart.displayType === 'area') {
       const ChartComponent = chart.displayType === 'line' ? LineChart : AreaChart
-      const DataComponent = chart.displayType === 'line' ? Line : Area
+      const isLine = chart.displayType === 'line'
       
       return (
         <ResponsiveContainer {...commonProps}>
@@ -245,8 +247,17 @@ export default function ProjectVisualizationPage() {
             <YAxis />
             <Tooltip />
             <Legend />
-            <DataComponent type="monotone" dataKey="target" stroke={chart.color} strokeDasharray="5 5" name="Target" />
-            <DataComponent type="monotone" dataKey="actual" stroke={chart.color} fill={chart.color} fillOpacity={0.6} name="Actual" />
+            {isLine ? (
+              <>
+                <Line type="monotone" dataKey="target" stroke={chart.color} strokeDasharray="5 5" name="Target" />
+                <Line type="monotone" dataKey="actual" stroke={chart.color} fill={chart.color} fillOpacity={0.6} name="Actual" />
+              </>
+            ) : (
+              <>
+                <Area type="monotone" dataKey="target" stroke={chart.color} strokeDasharray="5 5" name="Target" fill={chart.color} fillOpacity={0.1} />
+                <Area type="monotone" dataKey="actual" stroke={chart.color} fill={chart.color} fillOpacity={0.6} name="Actual" />
+              </>
+            )}
           </ChartComponent>
         </ResponsiveContainer>
       )
@@ -274,6 +285,8 @@ export default function ProjectVisualizationPage() {
       progress: Math.round(ind.progress),
       status: ind.status,
     }))
+
+    const commonProps = { width: '100%', height: (chart as any).height || 400 }
 
     if (chart.displayType === 'pie') {
       return (
@@ -322,6 +335,8 @@ export default function ProjectVisualizationPage() {
       actual: comp.actual,
     }))
 
+    const commonProps = { width: '100%', height: (chart as any).height || 400 }
+
     return (
       <ResponsiveContainer {...commonProps}>
         <BarChart data={chartData}>
@@ -344,9 +359,11 @@ export default function ProjectVisualizationPage() {
       indicator: item.indicatorName,
     }))
 
+    const commonProps = { width: '100%', height: (chart as any).height || 400 }
+
     if (chart.displayType === 'line' || chart.displayType === 'area') {
       const ChartComponent = chart.displayType === 'line' ? LineChart : AreaChart
-      const DataComponent = chart.displayType === 'line' ? Line : Area
+      const isLine = chart.displayType === 'line'
       
       return (
         <ResponsiveContainer {...commonProps}>
@@ -356,7 +373,11 @@ export default function ProjectVisualizationPage() {
             <YAxis />
             <Tooltip />
             <Legend />
-            <DataComponent type="monotone" dataKey="value" stroke={chart.color} fill={chart.color} fillOpacity={0.6} />
+            {isLine ? (
+              <Line type="monotone" dataKey="value" stroke={chart.color} fill={chart.color} fillOpacity={0.6} />
+            ) : (
+              <Area type="monotone" dataKey="value" stroke={chart.color} fill={chart.color} fillOpacity={0.6} />
+            )}
           </ChartComponent>
         </ResponsiveContainer>
       )

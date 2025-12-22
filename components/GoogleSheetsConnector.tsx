@@ -6,16 +6,18 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import api from '@/lib/api'
+import { orgApi } from '@/lib/api-helpers'
 
 interface GoogleSheetsConnectorProps {
   onSuccess: () => void
   onCancel: () => void
+  orgId?: string
 }
 
 export function GoogleSheetsConnector({
   onSuccess,
   onCancel,
+  orgId,
 }: GoogleSheetsConnectorProps) {
   const [sheetUrl, setSheetUrl] = useState('')
   const [name, setName] = useState('')
@@ -30,8 +32,12 @@ export function GoogleSheetsConnector({
   }, [])
 
   const fetchAuthUrl = async () => {
+    if (!orgId) {
+      console.error('Organization ID is required')
+      return
+    }
     try {
-      const response = await api.get('/data-import/google-auth-url')
+      const response = await orgApi.get(orgId, 'data-import/google-auth-url')
       setAuthUrl(response.data.authUrl)
     } catch (err: any) {
       console.error('Failed to fetch auth URL:', err)
@@ -67,8 +73,15 @@ export function GoogleSheetsConnector({
       return
     }
 
+    if (!orgId) {
+      setError('Organization ID is required')
+      setLoading(false)
+      return
+    }
+
     try {
-      await api.post('/data-import/google-sheets', {
+      // First, create the dataset
+      const response = await orgApi.post(orgId, 'data-import/google-sheets', {
         name,
         description,
         sourceType: 'google_sheets',
@@ -76,20 +89,37 @@ export function GoogleSheetsConnector({
         googleSheetId: sheetId,
       })
 
-      setConnected(true)
-      setTimeout(() => {
-        onSuccess()
-      }, 1500)
+      const datasetId = response.data.id
+
+      // Store orgId for callback
+      localStorage.setItem('currentOrgId', orgId)
+
+      // Get auth URL with datasetId as state parameter
+      const authResponse = await orgApi.get(orgId, `data-import/google-auth-url?datasetId=${datasetId}`)
+      
+      // Redirect to Google OAuth
+      window.location.href = authResponse.data.authUrl
     } catch (err: any) {
       setError(err.response?.data?.message || err.message || 'Failed to connect to Google Sheets')
-    } finally {
       setLoading(false)
     }
   }
 
-  const handleGoogleAuth = () => {
-    if (authUrl) {
-      window.location.href = authUrl
+  const handleGoogleAuth = async () => {
+    if (!orgId) {
+      setError('Organization ID is required')
+      return
+    }
+
+    try {
+      // Store orgId for callback
+      localStorage.setItem('currentOrgId', orgId)
+
+      // Get auth URL
+      const response = await orgApi.get(orgId, 'data-import/google-auth-url')
+      window.location.href = response.data.authUrl
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to get Google auth URL')
     }
   }
 

@@ -17,6 +17,7 @@ export interface Project {
   }
   teamMembers?: Array<{
     id: string
+    email: string
     firstName: string
     lastName: string
     avatar?: string
@@ -79,6 +80,7 @@ export interface User {
   avatar?: string
   role: 'admin' | 'manager' | 'field_staff' | 'viewer'
   isActive: boolean
+  hasCompletedOnboarding?: boolean
   createdAt: string
 }
 

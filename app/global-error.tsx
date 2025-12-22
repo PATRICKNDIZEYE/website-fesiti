@@ -33,7 +33,7 @@ export default function GlobalError({
               </CardHeader>
               <CardContent className="text-center space-y-4">
                 <p className="text-gray-600">
-                  We're sorry, but something went wrong. Please try refreshing the page.
+                  We&apos;re sorry, but something went wrong. Please try refreshing the page.
                 </p>
                 {error.digest && (
                   <p className="text-xs text-gray-500">

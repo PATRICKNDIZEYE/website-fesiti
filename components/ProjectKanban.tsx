@@ -28,11 +28,14 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import api from '@/lib/api'
+import { orgApi } from '@/lib/api-helpers'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 
 interface ProjectKanbanProps {
   projects: Project[]
   onUpdate: () => void
+  orgId?: string
 }
 
 const statusColumns: { id: ProjectStatus; label: string; color: string }[] = [
@@ -43,7 +46,7 @@ const statusColumns: { id: ProjectStatus; label: string; color: string }[] = [
   { id: 'cancelled', label: 'Cancelled', color: 'bg-gray-500/20 text-gray-600 border-gray-500/30' },
 ]
 
-function ProjectCard({ project, isDragging }: { project: Project; isDragging?: boolean }) {
+function ProjectCard({ project, isDragging, orgId }: { project: Project; isDragging?: boolean; orgId?: string }) {
   const handleClick = (e: React.MouseEvent) => {
     // Prevent navigation if we're dragging
     if (isDragging) {
@@ -51,6 +54,8 @@ function ProjectCard({ project, isDragging }: { project: Project; isDragging?: b
       e.stopPropagation()
     }
   }
+
+  const projectUrl = orgId ? `/org/${orgId}/projects/${project.id}` : `/projects/${project.id}`
 
   return (
     <Card
@@ -61,7 +66,7 @@ function ProjectCard({ project, isDragging }: { project: Project; isDragging?: b
     >
       <div onClick={handleClick}>
         <Link 
-          href={`/projects/${project.id}`}
+          href={projectUrl}
           className="block"
           onClick={(e) => {
             // Only allow navigation on click, not during drag
@@ -121,7 +126,7 @@ function ProjectCard({ project, isDragging }: { project: Project; isDragging?: b
   )
 }
 
-function SortableProjectCard({ project }: { project: Project }) {
+function SortableProjectCard({ project, orgId }: { project: Project; orgId?: string }) {
   const {
     attributes,
     listeners,
@@ -145,7 +150,7 @@ function SortableProjectCard({ project }: { project: Project }) {
       {...listeners}
       className="touch-none"
     >
-      <ProjectCard project={project} isDragging={isDragging} />
+      <ProjectCard project={project} isDragging={isDragging} orgId={orgId} />
     </div>
   )
 }
@@ -155,11 +160,13 @@ function StatusColumn({
   projects,
   label,
   color,
+  orgId,
 }: {
   status: ProjectStatus
   projects: Project[]
   label: string
   color: string
+  orgId?: string
 }) {
   const items = projects.map((p) => p.id)
   const { setNodeRef, isOver } = useDroppable({
@@ -183,7 +190,7 @@ function StatusColumn({
       <SortableContext items={items} strategy={verticalListSortingStrategy}>
         <div className="space-y-2 min-h-[200px]">
           {projects.map((project) => (
-            <SortableProjectCard key={project.id} project={project} />
+            <SortableProjectCard key={project.id} project={project} orgId={orgId} />
           ))}
           {projects.length === 0 && (
             <div className="text-center py-8 text-sm text-muted-foreground border-2 border-dashed border-border rounded-lg">
@@ -196,9 +203,13 @@ function StatusColumn({
   )
 }
 
-export function ProjectKanban({ projects, onUpdate }: ProjectKanbanProps) {
+export function ProjectKanban({ projects, onUpdate, orgId }: ProjectKanbanProps) {
+  const pathname = usePathname()
   const [activeId, setActiveId] = useState<string | null>(null)
   const [updating, setUpdating] = useState<string | null>(null)
+  
+  // Extract orgId from pathname if not provided
+  const currentOrgId = orgId || (pathname.match(/^\/org\/([^/]+)/)?.[1] ?? null)
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -259,9 +270,16 @@ export function ProjectKanban({ projects, onUpdate }: ProjectKanbanProps) {
     try {
       setUpdating(projectId)
       console.log('Updating project status:', projectId, 'from', project.status, 'to', newStatus)
-      await api.patch(`/projects/${projectId}`, {
-        status: newStatus,
-      })
+      
+      if (currentOrgId) {
+        await orgApi.patch(currentOrgId, `projects/${projectId}`, {
+          status: newStatus,
+        })
+      } else {
+        await api.patch(`/projects/${projectId}`, {
+          status: newStatus,
+        })
+      }
       await onUpdate()
     } catch (error: any) {
       console.error('Failed to update project status:', error)
@@ -290,6 +308,7 @@ export function ProjectKanban({ projects, onUpdate }: ProjectKanbanProps) {
               projects={columnProjects}
               label={column.label}
               color={column.color}
+              orgId={currentOrgId || undefined}
             />
           )
         })}

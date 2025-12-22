@@ -6,16 +6,18 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Plus, X, Edit2, Trash2, Target, AlertCircle, Loader2 } from 'lucide-react'
-import api from '@/lib/api'
+import { orgApi } from '@/lib/api-helpers'
 import { Indicator, Target as TargetType } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import { ConfirmationModal } from '@/components/ConfirmationModal'
 
 interface IndicatorManagerProps {
   projectId: string
   onUpdate?: () => void
+  orgId?: string
 }
 
-export function IndicatorManager({ projectId, onUpdate }: IndicatorManagerProps) {
+export function IndicatorManager({ projectId, onUpdate, orgId }: IndicatorManagerProps) {
   const [indicators, setIndicators] = useState<Indicator[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -27,9 +29,13 @@ export function IndicatorManager({ projectId, onUpdate }: IndicatorManagerProps)
   }, [projectId])
 
   const fetchIndicators = async () => {
+    if (!orgId) {
+      console.error('Organization ID is required')
+      return
+    }
     try {
       setLoading(true)
-      const response = await api.get(`/indicators?projectId=${projectId}`)
+      const response = await orgApi.get(orgId, `indicators?projectId=${projectId}`)
       setIndicators(response.data)
     } catch (error) {
       console.error('Failed to fetch indicators:', error)
@@ -39,17 +45,29 @@ export function IndicatorManager({ projectId, onUpdate }: IndicatorManagerProps)
     }
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this indicator? This will also delete all associated targets and reports.')) {
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [indicatorToDelete, setIndicatorToDelete] = useState<string | null>(null)
+
+  const handleDeleteClick = (id: string) => {
+    setIndicatorToDelete(id)
+    setShowDeleteModal(true)
+  }
+
+  const handleDelete = async () => {
+    if (!indicatorToDelete || !orgId) {
+      console.error('Organization ID or indicator ID is required')
       return
     }
-
     try {
-      await api.delete(`/indicators/${id}`)
+      await orgApi.delete(orgId, `indicators/${indicatorToDelete}`)
+      setShowDeleteModal(false)
+      setIndicatorToDelete(null)
       fetchIndicators()
       onUpdate?.()
     } catch (error: any) {
       setError(error.response?.data?.message || 'Failed to delete indicator')
+      setShowDeleteModal(false)
+      setIndicatorToDelete(null)
     }
   }
 
@@ -63,6 +81,17 @@ export function IndicatorManager({ projectId, onUpdate }: IndicatorManagerProps)
 
   return (
     <div className="space-y-4">
+      <ConfirmationModal
+        open={showDeleteModal}
+        onOpenChange={setShowDeleteModal}
+        onConfirm={handleDelete}
+        title="Delete Indicator"
+        description="Are you sure you want to delete this indicator? This will also delete all associated targets and reports. This action cannot be undone."
+        type="delete"
+        confirmText="Delete"
+        cancelText="Cancel"
+      />
+      
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-foreground">Indicators</h3>
         <Button
@@ -86,6 +115,7 @@ export function IndicatorManager({ projectId, onUpdate }: IndicatorManagerProps)
       {showAddForm && (
         <AddIndicatorForm
           projectId={projectId}
+          orgId={orgId}
           onSuccess={() => {
             setShowAddForm(false)
             fetchIndicators()
@@ -116,6 +146,7 @@ export function IndicatorManager({ projectId, onUpdate }: IndicatorManagerProps)
               indicator={indicator}
               onDelete={handleDelete}
               onUpdate={fetchIndicators}
+              orgId={orgId}
             />
           ))}
         </div>
@@ -126,10 +157,12 @@ export function IndicatorManager({ projectId, onUpdate }: IndicatorManagerProps)
 
 function AddIndicatorForm({
   projectId,
+  orgId,
   onSuccess,
   onCancel,
 }: {
   projectId: string
+  orgId?: string
   onSuccess: () => void
   onCancel: () => void
 }) {
@@ -187,7 +220,12 @@ function AddIndicatorForm({
         throw new Error('Indicator name is required')
       }
 
-      await api.post('/indicators', {
+      if (!orgId) {
+        console.error('Organization ID is required')
+        setError('Organization ID is required')
+        return
+      }
+      await orgApi.post(orgId, 'indicators', {
         ...formData,
         projectId,
       })
@@ -291,10 +329,12 @@ function IndicatorCard({
   indicator,
   onDelete,
   onUpdate,
+  orgId,
 }: {
   indicator: Indicator
   onDelete: (id: string) => void
   onUpdate: () => void
+  orgId?: string
 }) {
   const [showTargetForm, setShowTargetForm] = useState(false)
   const [targets, setTargets] = useState<TargetType[]>([])
@@ -346,6 +386,7 @@ function IndicatorCard({
             setShowTargetForm(false)
             onUpdate()
           }}
+          orgId={orgId}
         />
       )}
 
@@ -368,22 +409,30 @@ function IndicatorCard({
 function TargetManager({
   indicatorId,
   onSuccess,
+  orgId,
 }: {
   indicatorId: string
   onSuccess: () => void
+  orgId?: string
 }) {
   const [targets, setTargets] = useState<TargetType[]>([])
   const [loading, setLoading] = useState(true)
   const [showAddForm, setShowAddForm] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [targetToDelete, setTargetToDelete] = useState<string | null>(null)
 
   useEffect(() => {
     fetchTargets()
-  }, [indicatorId])
+  }, [indicatorId, orgId])
 
   const fetchTargets = async () => {
+    if (!orgId) {
+      console.error('Organization ID is required')
+      return
+    }
     try {
       setLoading(true)
-      const indicator = await api.get(`/indicators/${indicatorId}`)
+      const indicator = await orgApi.get(orgId, `indicators/${indicatorId}`)
       setTargets(indicator.data.targets || [])
     } catch (error) {
       console.error('Failed to fetch targets:', error)
@@ -392,23 +441,44 @@ function TargetManager({
     }
   }
 
-  const handleDelete = async (targetId: string) => {
-    if (!confirm('Are you sure you want to delete this target?')) {
+  const handleDeleteClick = (targetId: string) => {
+    setTargetToDelete(targetId)
+    setShowDeleteModal(true)
+  }
+
+  const handleDelete = async () => {
+    if (!targetToDelete || !orgId) {
+      console.error('Organization ID or target ID is required')
       return
     }
 
     try {
-      await api.delete(`/indicators/${indicatorId}/targets/${targetId}`)
+      await orgApi.delete(orgId, `indicators/${indicatorId}/targets/${targetToDelete}`)
+      setShowDeleteModal(false)
+      setTargetToDelete(null)
       await fetchTargets()
       onSuccess()
     } catch (error: any) {
       console.error('Failed to delete target:', error)
       alert(error.response?.data?.message || 'Failed to delete target')
+      setShowDeleteModal(false)
+      setTargetToDelete(null)
     }
   }
 
   return (
     <div className="mt-3 pt-3 border-t border-border space-y-3">
+      <ConfirmationModal
+        open={showDeleteModal}
+        onOpenChange={setShowDeleteModal}
+        onConfirm={handleDelete}
+        title="Delete Target"
+        description="Are you sure you want to delete this target? This action cannot be undone."
+        type="delete"
+        confirmText="Delete"
+        cancelText="Cancel"
+      />
+      
       <div className="flex items-center justify-between">
         <h5 className="text-sm font-medium text-foreground">Targets</h5>
         <Button
@@ -431,6 +501,7 @@ function TargetManager({
             onSuccess()
           }}
           onCancel={() => setShowAddForm(false)}
+          orgId={orgId}
         />
       )}
 
@@ -450,7 +521,7 @@ function TargetManager({
                 )}
               </div>
               <Button
-                onClick={() => handleDelete(target.id)}
+                onClick={() => handleDeleteClick(target.id)}
                 variant="ghost"
                 size="sm"
                 className="h-6 w-6 p-0 text-crimson-500"
@@ -469,10 +540,12 @@ function AddTargetForm({
   indicatorId,
   onSuccess,
   onCancel,
+  orgId,
 }: {
   indicatorId: string
   onSuccess: () => void
   onCancel: () => void
+  orgId?: string
 }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -492,7 +565,11 @@ function AddTargetForm({
         throw new Error('Value and target date are required')
       }
 
-      await api.post(`/indicators/${indicatorId}/targets`, {
+      if (!orgId) {
+        console.error('Organization ID is required')
+        return
+      }
+      await orgApi.post(orgId, `indicators/${indicatorId}/targets`, {
         value: parseFloat(formData.value),
         targetDate: formData.targetDate,
         notes: formData.notes || undefined,

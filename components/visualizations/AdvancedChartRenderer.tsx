@@ -41,8 +41,8 @@ export function AdvancedChartRenderer({
   switch (chartType) {
     case 'heatmap':
       // For heatmap, we need to create a 2D array
-      const xValues = [...new Set(data.map((d) => d.x || d.xAxis))].sort()
-      const yValues = [...new Set(data.map((d) => d.y || d.yAxis))].sort()
+      const xValues = Array.from(new Set(data.map((d) => d.x || d.xAxis))).sort()
+      const yValues = Array.from(new Set(data.map((d) => d.y || d.yAxis))).sort()
       const zMatrix: number[][] = yValues.map(() => xValues.map(() => 0))
       
       data.forEach((d) => {

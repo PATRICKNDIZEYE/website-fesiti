@@ -7,14 +7,15 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertCircle } from 'lucide-react'
-import api from '@/lib/api'
+import { orgApi } from '@/lib/api-helpers'
 
 interface ExcelUploaderProps {
   onSuccess: () => void
   onCancel: () => void
+  orgId?: string
 }
 
-export function ExcelUploader({ onSuccess, onCancel }: ExcelUploaderProps) {
+export function ExcelUploader({ onSuccess, onCancel, orgId }: ExcelUploaderProps) {
   const [file, setFile] = useState<File | null>(null)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
@@ -95,7 +96,13 @@ export function ExcelUploader({ onSuccess, onCancel }: ExcelUploaderProps) {
       formData.append('description', description)
       formData.append('sourceType', 'excel')
 
-      await api.post('/data-import/excel', formData, {
+      if (!orgId) {
+        setError('Organization ID is required')
+        setLoading(false)
+        return
+      }
+
+      await orgApi.post(orgId, 'data-import/excel', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

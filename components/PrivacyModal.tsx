@@ -89,7 +89,7 @@ export function PrivacyModal({ open, onOpenChange }: PrivacyModalProps) {
           </section>
 
           <section>
-            <h3 className="text-foreground font-semibold mb-2">8. Children's Privacy</h3>
+            <h3 className="text-foreground font-semibold mb-2">8. Children&apos;s Privacy</h3>
             <p>
               Our Service is not intended for children under 13 years of age. We do not knowingly collect personal information from children under 13.
             </p>
@@ -98,7 +98,7 @@ export function PrivacyModal({ open, onOpenChange }: PrivacyModalProps) {
           <section>
             <h3 className="text-foreground font-semibold mb-2">9. Changes to This Privacy Policy</h3>
             <p>
-              We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "Last updated" date.
+              We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the &quot;Last updated&quot; date.
             </p>
           </section>
 

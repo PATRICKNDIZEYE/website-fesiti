@@ -1,24 +1,38 @@
 'use client'
 
-import { Sidebar } from '@/components/Sidebar'
-import { Header } from '@/components/Header'
-import { TeamChat } from '@/components/TeamChat'
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { Loader2 } from 'lucide-react'
 
-export default function SettingsPage() {
+/**
+ * Redirect old settings route to organization settings
+ */
+export default function SettingsRedirectPage() {
+  const router = useRouter()
+
+  useEffect(() => {
+    const userStr = localStorage.getItem('user')
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr)
+        if (user.organizationId) {
+          router.replace(`/org/${user.organizationId}/settings`)
+          return
+        }
+      } catch (e) {
+        console.error('Error parsing user data:', e)
+      }
+    }
+    // If no organizationId, redirect to login
+    router.replace('/login')
+  }, [router])
+
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar />
-      
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header title="Settings" />
-        
-        <div className="flex-1 overflow-y-auto flex items-center justify-center">
-          <div className="text-gray-500">Settings feature coming soon</div>
-        </div>
+    <div className="flex items-center justify-center h-screen bg-background">
+      <div className="flex flex-col items-center space-y-4">
+        <Loader2 className="w-8 h-8 animate-spin text-gold-500" />
+        <p className="text-muted-foreground">Redirecting...</p>
       </div>
-
-      <TeamChat />
     </div>
   )
 }
-

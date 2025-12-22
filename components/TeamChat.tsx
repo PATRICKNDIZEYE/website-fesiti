@@ -11,8 +11,9 @@ import { useLayout } from '@/contexts/LayoutContext'
 import { EmojiPickerComponent } from './EmojiPicker'
 import { VoiceRecorder } from './VoiceRecorder'
 import api from '@/lib/api'
+import { orgApi } from '@/lib/api-helpers'
 import { format } from 'date-fns'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 
 interface User {
   id: string
@@ -31,8 +32,13 @@ interface Message {
   createdAt: string
 }
 
-export function TeamChat() {
+interface TeamChatProps {
+  orgId?: string
+}
+
+export function TeamChat({ orgId }: TeamChatProps = {}) {
   const router = useRouter()
+  const pathname = usePathname()
   const [message, setMessage] = useState('')
   const [expanded, setExpanded] = useState(false)
   const [recentMessages, setRecentMessages] = useState<Message[]>([])
@@ -40,27 +46,34 @@ export function TeamChat() {
   const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [voiceBlob, setVoiceBlob] = useState<Blob | null>(null)
   const { chatCollapsed, setChatCollapsed } = useLayout()
+  
+  // Extract orgId from pathname if not provided
+  const currentOrgId = orgId || (pathname.match(/^\/org\/([^/]+)/)?.[1] ?? null)
 
   useEffect(() => {
     const userStr = localStorage.getItem('user')
     if (userStr) {
       setCurrentUser(JSON.parse(userStr))
     }
-    fetchRecentMessages()
-    const interval = setInterval(fetchRecentMessages, 5000) // Poll every 5 seconds
-    return () => clearInterval(interval)
-  }, [])
+    if (currentOrgId) {
+      fetchRecentMessages()
+      const interval = setInterval(fetchRecentMessages, 5000) // Poll every 5 seconds
+      return () => clearInterval(interval)
+    }
+  }, [currentOrgId])
 
   const fetchRecentMessages = async () => {
+    if (!currentOrgId) return
+    
     try {
-      const response = await api.get('/messages/conversations')
+      const response = await orgApi.get(currentOrgId, 'messages/conversations')
       const conversations = response.data || []
       
       // Get messages from all conversations
       const allMessages: Message[] = []
       for (const conv of conversations.slice(0, 5)) {
         try {
-          const msgResponse = await api.get(`/messages/conversations/${conv.id}/messages`, {
+          const msgResponse = await orgApi.get(currentOrgId, `messages/conversations/${conv.id}/messages`, {
             params: { limit: 3 },
           })
           if (msgResponse.data.messages) {
@@ -85,7 +98,11 @@ export function TeamChat() {
     if ((!message.trim() && !voiceBlob) || loading) return
 
     // Redirect to messages page to send
-    router.push('/messages')
+    if (currentOrgId) {
+      router.push(`/org/${currentOrgId}/messages`)
+    } else {
+      router.push('/messages')
+    }
   }
 
   const toggleCollapse = () => {
@@ -128,10 +145,13 @@ export function TeamChat() {
   }
 
   return (
-    <div className={cn(
-      "bg-card border-l border-border flex flex-col h-screen fixed right-0 top-0 z-40 transition-all duration-300",
-      expanded ? "fixed inset-0 z-50" : "w-80"
-    )}>
+    <div 
+      className={cn(
+        "bg-card border-l border-border flex flex-col h-screen fixed right-0 top-0 z-40 transition-all duration-300",
+        expanded ? "fixed inset-0 z-50" : "w-80"
+      )}
+      data-tour="team-chat"
+    >
       {/* Header */}
       <div className="p-4 border-b border-border flex items-center justify-between bg-card">
         <div className="flex items-center space-x-3">
@@ -154,7 +174,13 @@ export function TeamChat() {
                 variant="ghost" 
                 size="icon" 
                 className="h-8 w-8"
-                onClick={() => router.push('/messages')}
+                onClick={() => {
+                  if (currentOrgId) {
+                    router.push(`/org/${currentOrgId}/messages`)
+                  } else {
+                    router.push('/messages')
+                  }
+                }}
               >
                 <Search className="w-4 h-4 text-muted-foreground" />
               </Button>
@@ -194,7 +220,13 @@ export function TeamChat() {
             <p>No recent messages</p>
             <Button
               variant="link"
-              onClick={() => router.push('/messages')}
+              onClick={() => {
+                if (currentOrgId) {
+                  router.push(`/org/${currentOrgId}/messages`)
+                } else {
+                  router.push('/messages')
+                }
+              }}
               className="mt-2"
             >
               Go to Messages
@@ -318,7 +350,13 @@ export function TeamChat() {
         <div className="mt-2 text-xs text-center text-muted-foreground">
           <Button
             variant="link"
-            onClick={() => router.push('/messages')}
+            onClick={() => {
+              if (currentOrgId) {
+                router.push(`/org/${currentOrgId}/messages`)
+              } else {
+                router.push('/messages')
+              }
+            }}
             className="h-auto p-0 text-xs"
           >
             Open full messages →

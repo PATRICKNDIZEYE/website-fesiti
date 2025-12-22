@@ -7,6 +7,8 @@ export interface User {
   lastName: string
   avatar?: string
   role: 'admin' | 'manager' | 'field_staff' | 'viewer'
+  organizationId?: string
+  hasCompletedOnboarding?: boolean
 }
 
 export interface LoginResponse {

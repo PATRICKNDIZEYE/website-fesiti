@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react'
 import { Trash2, RefreshCw, Eye, ExternalLink, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import api from '@/lib/api'
+import { orgApi } from '@/lib/api-helpers'
 import Link from 'next/link'
+import { ConfirmationModal } from '@/components/ConfirmationModal'
 
 interface Dataset {
   id: string
@@ -24,21 +25,28 @@ interface Dataset {
 
 interface DatasetManagerProps {
   onUpdate?: () => void
+  orgId?: string
 }
 
-export function DatasetManager({ onUpdate }: DatasetManagerProps) {
+export function DatasetManager({ onUpdate, orgId }: DatasetManagerProps) {
   const [datasets, setDatasets] = useState<Dataset[]>([])
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState<string | null>(null)
 
   useEffect(() => {
-    fetchDatasets()
-  }, [])
+    if (orgId) {
+      fetchDatasets()
+    }
+  }, [orgId])
 
   const fetchDatasets = async () => {
+    if (!orgId) {
+      console.error('Organization ID is required')
+      return
+    }
     try {
       setLoading(true)
-      const response = await api.get('/data-import/datasets')
+      const response = await orgApi.get(orgId, 'data-import/datasets')
       setDatasets(response.data)
     } catch (error) {
       console.error('Failed to fetch datasets:', error)
@@ -47,24 +55,42 @@ export function DatasetManager({ onUpdate }: DatasetManagerProps) {
     }
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this dataset?')) {
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [datasetToDelete, setDatasetToDelete] = useState<string | null>(null)
+
+  const handleDeleteClick = (id: string) => {
+    setDatasetToDelete(id)
+    setShowDeleteModal(true)
+  }
+
+  const handleDelete = async () => {
+    if (!datasetToDelete || !orgId) {
+      alert('Organization ID or dataset ID is required')
       return
     }
 
     try {
-      await api.delete(`/data-import/datasets/${id}`)
+      await orgApi.delete(orgId, `data-import/datasets/${datasetToDelete}`)
+      setShowDeleteModal(false)
+      setDatasetToDelete(null)
       await fetchDatasets()
       onUpdate?.()
     } catch (error: any) {
       alert(error.response?.data?.message || 'Failed to delete dataset')
+      setShowDeleteModal(false)
+      setDatasetToDelete(null)
     }
   }
 
   const handleSync = async (id: string) => {
+    if (!orgId) {
+      alert('Organization ID is required')
+      return
+    }
+
     try {
       setSyncing(id)
-      await api.post(`/data-import/datasets/${id}/sync`)
+      await orgApi.post(orgId, `data-import/datasets/${id}/sync`)
       await fetchDatasets()
       onUpdate?.()
     } catch (error: any) {
@@ -91,8 +117,20 @@ export function DatasetManager({ onUpdate }: DatasetManagerProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {datasets.map((dataset) => (
+    <>
+      <ConfirmationModal
+        open={showDeleteModal}
+        onOpenChange={setShowDeleteModal}
+        onConfirm={handleDelete}
+        title="Delete Dataset"
+        description="Are you sure you want to delete this dataset? This action cannot be undone and all associated data will be permanently removed."
+        type="delete"
+        confirmText="Delete"
+        cancelText="Cancel"
+      />
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {datasets.map((dataset) => (
         <Card key={dataset.id}>
           <CardHeader>
             <div className="flex items-start justify-between">
@@ -131,7 +169,7 @@ export function DatasetManager({ onUpdate }: DatasetManagerProps) {
               )}
 
               <div className="flex items-center space-x-2 pt-2 border-t">
-                <Link href={`/data-import/${dataset.id}/visualize`}>
+                <Link href={orgId ? `/org/${orgId}/data-import/${dataset.id}/visualize` : '#'}>
                   <Button variant="outline" size="sm" className="flex-1">
                     <Eye className="w-4 h-4 mr-1" />
                     Visualize
@@ -156,7 +194,7 @@ export function DatasetManager({ onUpdate }: DatasetManagerProps) {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleDelete(dataset.id)}
+                  onClick={() => handleDeleteClick(dataset.id)}
                   className="text-crimson-500 hover:text-crimson-600"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -166,7 +204,8 @@ export function DatasetManager({ onUpdate }: DatasetManagerProps) {
           </CardContent>
         </Card>
       ))}
-    </div>
+      </div>
+    </>
   )
 }
 

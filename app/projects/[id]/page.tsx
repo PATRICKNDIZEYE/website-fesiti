@@ -1,210 +1,31 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter, useParams } from 'next/navigation'
-import { Sidebar } from '@/components/Sidebar'
-import { Header } from '@/components/Header'
-import { TeamChat } from '@/components/TeamChat'
-import { IndicatorManager } from '@/components/IndicatorManager'
-import { ReportSubmissionForm } from '@/components/ReportSubmissionForm'
-import { useLayout } from '@/contexts/LayoutContext'
-import { ArrowLeft, Plus } from 'lucide-react'
-import api from '@/lib/api'
-import { Project } from '@/lib/types'
-import Link from 'next/link'
-import { cn } from '@/lib/utils'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
-export default function ProjectDetailPage() {
+export default function ProjectDetailRedirect() {
   const router = useRouter()
-  const params = useParams()
-  const [project, setProject] = useState<Project | null>(null)
-  const [loading, setLoading] = useState(true)
-  const { sidebarCollapsed, chatCollapsed } = useLayout()
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      router.push('/login')
-      return
+    const userStr = localStorage.getItem('user')
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr)
+        if (user.organizationId) {
+          const projectId = window.location.pathname.split('/projects/')[1]
+          router.replace(`/org/${user.organizationId}/projects/${projectId}`)
+          return
+        }
+      } catch (error) {
+        console.error('Failed to parse user data:', error)
+      }
     }
-
-    if (params.id) {
-      fetchProject(params.id as string)
-    }
-  }, [params.id, router])
-
-  const fetchProject = async (id: string) => {
-    try {
-      const response = await api.get(`/projects/${id}`)
-      setProject(response.data)
-    } catch (error) {
-      console.error('Failed to fetch project:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-background">
-        <div className="text-muted-foreground">Loading...</div>
-      </div>
-    )
-  }
-
-  if (!project) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-background">
-        <div className="text-muted-foreground">Project not found</div>
-      </div>
-    )
-  }
+    router.replace('/login')
+  }, [router])
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
-      <Sidebar />
-      
-      <div className={cn(
-        "flex-1 flex flex-col overflow-hidden transition-all duration-300",
-        sidebarCollapsed ? "ml-20" : "ml-64",
-        chatCollapsed ? "mr-12" : "mr-80"
-      )}>
-        <Header title={project.name} />
-        
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-6">
-            <Link
-              href="/projects"
-              className="inline-flex items-center space-x-2 text-muted-foreground hover:text-foreground mb-6"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Back to Projects</span>
-            </Link>
-
-            <div className="bg-card rounded-lg border border-border p-6 mb-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <h2 className="text-2xl font-bold text-foreground mb-2">{project.name}</h2>
-                  <p className="text-muted-foreground">{project.description || 'No description'}</p>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <Link
-                    href={`/projects/${project.id}/edit`}
-                    className="px-4 py-2 bg-gold-500 hover:bg-gold-600 text-charcoal-900 rounded-lg transition-colors text-sm font-medium"
-                  >
-                    Edit Project
-                  </Link>
-                  <span
-                    className={`px-3 py-1 text-sm font-medium rounded ${
-                      project.status === 'active'
-                        ? 'bg-gold-500/20 text-gold-600 dark:text-gold-500 border border-gold-500/30'
-                        : project.status === 'completed'
-                        ? 'bg-gold-500/20 text-gold-600 dark:text-gold-500 border border-gold-500/30'
-                        : project.status === 'on_hold'
-                        ? 'bg-crimson-500/20 text-crimson-600 dark:text-crimson-500 border border-crimson-500/30'
-                        : 'bg-muted text-muted-foreground border border-border'
-                    }`}
-                  >
-                    {project.status}
-                  </span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div>
-                  <p className="text-sm text-muted-foreground">Progress</p>
-                  <p className="text-2xl font-bold text-foreground mt-1">
-                    {Math.round(project.progress)}%
-                  </p>
-                  <div className="w-full bg-muted rounded-full h-2 mt-2">
-                    <div
-                      className="bg-gold-500 h-2 rounded-full"
-                      style={{ width: `${project.progress}%` }}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Team Members</p>
-                  <p className="text-2xl font-bold text-foreground mt-1">
-                    {project.teamMembers?.length || 0}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Indicators</p>
-                  <p className="text-2xl font-bold text-foreground mt-1">
-                    {project.indicators?.length || 0}
-                  </p>
-                </div>
-              </div>
-
-              {project.startDate && project.endDate && (
-                <div className="text-sm text-muted-foreground">
-                  <span>
-                    {new Date(project.startDate).toLocaleDateString()} -{' '}
-                    {new Date(project.endDate).toLocaleDateString()}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            <Tabs defaultValue="indicators" className="space-y-4">
-              <TabsList className="bg-muted">
-                <TabsTrigger value="indicators">Indicators & Targets</TabsTrigger>
-                <TabsTrigger value="reports">Submit Report</TabsTrigger>
-                <TabsTrigger value="team">Team Members</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="indicators" className="space-y-4">
-                <div className="bg-card rounded-lg border border-border p-6">
-                  <IndicatorManager projectId={project.id} onUpdate={fetchProject} />
-                </div>
-              </TabsContent>
-
-              <TabsContent value="reports" className="space-y-4">
-                <ReportSubmissionForm projectId={project.id} onSuccess={fetchProject} />
-              </TabsContent>
-
-              <TabsContent value="team" className="space-y-4">
-                <div className="bg-card rounded-lg border border-border p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-foreground">Team Members</h3>
-                    <button className="flex items-center space-x-1 text-gold-500 hover:text-gold-600">
-                      <Plus className="w-4 h-4" />
-                      <span className="text-sm">Add</span>
-                    </button>
-                  </div>
-                  <div className="space-y-3">
-                    {project.teamMembers && project.teamMembers.length > 0 ? (
-                      project.teamMembers.map((member) => (
-                        <div
-                          key={member.id}
-                          className="flex items-center space-x-3 p-3 border border-border rounded-lg"
-                        >
-                          <div className="w-10 h-10 rounded-full bg-gold-500/20 flex items-center justify-center text-gold-500 font-medium border border-gold-500/30">
-                            {member.firstName[0]}{member.lastName[0]}
-                          </div>
-                          <div>
-                            <p className="font-medium text-foreground">
-                              {member.firstName} {member.lastName}
-                            </p>
-                            <p className="text-sm text-muted-foreground">{member.email}</p>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-muted-foreground text-sm">No team members yet</p>
-                    )}
-                  </div>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </div>
-        </div>
-      </div>
-
-      <TeamChat />
+    <div className="flex items-center justify-center h-screen bg-background">
+      <div className="text-muted-foreground">Redirecting...</div>
     </div>
   )
 }
-
