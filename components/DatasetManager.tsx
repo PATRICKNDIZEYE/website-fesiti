@@ -1,4 +1,5 @@
 'use client'
+/* eslint-disable react-hooks/exhaustive-deps */
 
 import { useState, useEffect } from 'react'
 import { Trash2, RefreshCw, Eye, ExternalLink, Loader2 } from 'lucide-react'
@@ -195,7 +196,7 @@ export function DatasetManager({ onUpdate, orgId }: DatasetManagerProps) {
                   variant="outline"
                   size="sm"
                   onClick={() => handleDeleteClick(dataset.id)}
-                  className="text-crimson-500 hover:text-crimson-600"
+                  className="text-destructive hover:text-destructive/80"
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
@@ -208,4 +209,3 @@ export function DatasetManager({ onUpdate, orgId }: DatasetManagerProps) {
     </>
   )
 }
-

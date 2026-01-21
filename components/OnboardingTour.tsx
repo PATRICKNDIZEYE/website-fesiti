@@ -11,27 +11,25 @@ interface OnboardingTourProps {
 
 const tourSteps: Step[] = [
   {
-    target: '[data-tour="sidebar"]',
+    target: '[data-tour="top-nav"]',
     content: (
       <div>
-        <h3 className="font-semibold text-foreground mb-2">Navigation Sidebar</h3>
+        <h3 className="font-semibold text-foreground mb-2">Global Navigation</h3>
         <p className="text-sm text-muted-foreground">
-          Use the sidebar to navigate between different sections: Dashboard, Projects, Messages, Calendar, and more.
-          You can collapse it to save space.
+          Use the top navigation to move between dashboards, programs, analysis, data, and collaboration spaces.
         </p>
       </div>
     ),
-    placement: 'right',
+    placement: 'bottom',
     disableBeacon: true,
   },
   {
-    target: '[data-tour="header"]',
+    target: '[data-tour="create-project"]',
     content: (
       <div>
-        <h3 className="font-semibold text-foreground mb-2">Quick Actions</h3>
+        <h3 className="font-semibold text-foreground mb-2">Create a Program</h3>
         <p className="text-sm text-muted-foreground">
-          The header provides quick access to create new projects, search, and navigate to key sections.
-          The badge shows your active project count.
+          Start a new program from here. We will guide you through targets, milestones, and reporting cadence.
         </p>
       </div>
     ),
@@ -62,18 +60,6 @@ const tourSteps: Step[] = [
     placement: 'top',
   },
   {
-    target: '[data-tour="create-project"]',
-    content: (
-      <div>
-        <h3 className="font-semibold text-foreground mb-2">Create Your First Project</h3>
-        <p className="text-sm text-muted-foreground">
-          Click the plus icon in the header to create a new project. You can also use the &quot;Create Project&quot; button in the Projects section.
-        </p>
-      </div>
-    ),
-    placement: 'bottom',
-  },
-  {
     target: '[data-tour="team-chat"]',
     content: (
       <div>
@@ -90,7 +76,7 @@ const tourSteps: Step[] = [
 
 const joyrideStyles: Partial<Styles> = {
   options: {
-    primaryColor: '#D4A017', // Gold color
+    primaryColor: '#1B3A57',
     zIndex: 10000,
   },
   tooltip: {
@@ -100,8 +86,8 @@ const joyrideStyles: Partial<Styles> = {
     textAlign: 'left',
   },
   buttonNext: {
-    backgroundColor: '#D4A017',
-    color: '#1a1a1a',
+    backgroundColor: '#1B3A57',
+    color: '#ffffff',
     fontSize: '14px',
     fontWeight: 600,
     padding: '8px 16px',
@@ -184,4 +170,3 @@ export function OnboardingTour({ orgId, onComplete }: OnboardingTourProps) {
     />
   )
 }
-

@@ -44,7 +44,7 @@ export default function LoginPage() {
       const response = await authService.login(email, password)
       localStorage.setItem('token', response.access_token)
       localStorage.setItem('user', JSON.stringify(response.user))
-      
+
       // Redirect to organization dashboard
       if (response.user.organizationId) {
         router.push(`/org/${response.user.organizationId}/dashboard`)
@@ -80,8 +80,8 @@ export default function LoginPage() {
 
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gold-500 rounded-2xl mb-4 shadow-lg">
-            <span className="text-charcoal-900 dark:text-charcoal-900 font-bold text-2xl">T</span>
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl mb-4 shadow-lg">
+            <span className="text-primary-foreground font-bold text-2xl">T</span>
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-2">Welcome Back</h1>
           <p className="text-muted-foreground">Sign in to your PM Tool account</p>
@@ -102,7 +102,7 @@ export default function LoginPage() {
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
-              
+
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-foreground">Email</Label>
                 <div className="relative">
@@ -140,18 +140,18 @@ export default function LoginPage() {
                   <input
                     id="remember"
                     type="checkbox"
-                    className="h-4 w-4 rounded border-border bg-background text-gold-500 focus:ring-gold-500"
+                    className="h-4 w-4 rounded border-border bg-background text-primary focus:ring-primary/30"
                   />
                   <Label htmlFor="remember" className="text-sm text-muted-foreground cursor-pointer">
                     Remember me
                   </Label>
                 </div>
-                <Link href="/forgot-password" className="text-sm text-gold-500 hover:text-gold-600">
+                <Link href="/forgot-password" className="text-sm text-primary hover:text-primary/80">
                   Forgot password?
                 </Link>
               </div>
 
-              <Button type="submit" className="w-full bg-gold-500 hover:bg-gold-600 text-charcoal-900" size="lg" disabled={loading}>
+              <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" size="lg" disabled={loading}>
                 {loading ? (
                   'Signing in...'
                 ) : (
@@ -176,7 +176,7 @@ export default function LoginPage() {
                 variant="outline"
                 className="w-full border-slate-400 text-white hover:bg-slate-600/50"
                 onClick={() => {
-                  window.location.href = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/auth/google`
+                  window.location.href = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:57959'}/auth/google`
                 }}
               >
                 <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
@@ -204,7 +204,7 @@ export default function LoginPage() {
           <CardFooter className="flex flex-col space-y-4">
             <div className="text-sm text-center text-muted-foreground">
               Don&apos;t have an account?{' '}
-              <Link href="/register" className="text-gold-500 hover:text-gold-600 font-medium">
+              <Link href="/register" className="text-primary hover:text-primary/80 font-medium">
                 Create account
               </Link>
             </div>
@@ -216,7 +216,7 @@ export default function LoginPage() {
           <button
             type="button"
             onClick={() => setTermsOpen(true)}
-            className="text-gold-500 hover:text-gold-600 underline"
+            className="text-primary hover:text-primary/80 underline"
           >
             Terms of Service
           </button>{' '}
@@ -224,7 +224,7 @@ export default function LoginPage() {
           <button
             type="button"
             onClick={() => setPrivacyOpen(true)}
-            className="text-gold-500 hover:text-gold-600 underline"
+            className="text-primary hover:text-primary/80 underline"
           >
             Privacy Policy
           </button>

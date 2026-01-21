@@ -2,18 +2,13 @@
 
 import { useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { Sidebar } from '@/components/Sidebar'
 import { Header } from '@/components/Header'
 import { TeamChat } from '@/components/TeamChat'
-import { useLayout } from '@/contexts/LayoutContext'
-import { cn } from '@/lib/utils'
 
 export default function SettingsPage() {
   const router = useRouter()
   const params = useParams()
   const orgId = params.orgId as string
-  const { sidebarCollapsed, chatCollapsed } = useLayout()
-
   useEffect(() => {
     const token = localStorage.getItem('token')
     if (!token) {
@@ -28,23 +23,14 @@ export default function SettingsPage() {
   }, [router, orgId])
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
-      <Sidebar orgId={orgId} />
-      
-      <div className={cn(
-        "flex-1 flex flex-col overflow-hidden transition-all duration-300",
-        sidebarCollapsed ? "ml-20" : "ml-64",
-        chatCollapsed ? "mr-12" : "mr-80"
-      )}>
-        <Header title="Settings" />
-        
-        <div className="flex-1 overflow-y-auto flex items-center justify-center">
-          <div className="text-muted-foreground">Settings feature coming soon</div>
-        </div>
+    <div className="space-y-6">
+      <Header title="Settings" subtitle="Workspace preferences and governance." />
+
+      <div className="flex items-center justify-center rounded-2xl border border-dashed border-border/60 bg-card/60 p-12 text-muted-foreground">
+        Settings feature coming soon
       </div>
 
       <TeamChat orgId={orgId} />
     </div>
   )
 }
-

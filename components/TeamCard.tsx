@@ -21,11 +21,11 @@ export function TeamCard({ project, onClick, highlighted = false }: TeamCardProp
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
-        return 'bg-gold-500/20 text-gold-500 border-gold-500/30'
+        return 'bg-primary/10 text-primary border-primary/20'
       case 'completed':
-        return 'bg-gold-500/20 text-gold-500 border-gold-500/30'
+        return 'bg-primary/10 text-primary border-primary/20'
       case 'on_hold':
-        return 'bg-crimson-500/20 text-crimson-500 border-crimson-500/30'
+        return 'bg-destructive/10 text-destructive border-destructive/20'
       default:
         return 'bg-slate-400/20 text-gray-300 border-slate-400'
     }
@@ -35,7 +35,7 @@ export function TeamCard({ project, onClick, highlighted = false }: TeamCardProp
     <div
       className={cn(
         "bg-card rounded-xl border-2 p-6 hover:shadow-lg transition-all cursor-pointer",
-        highlighted ? "border-gold-500 border-dashed" : "border-border"
+        highlighted ? "border-primary border-dashed" : "border-border"
       )}
       onClick={onClick}
     >
@@ -60,12 +60,12 @@ export function TeamCard({ project, onClick, highlighted = false }: TeamCardProp
       <div className="flex items-center -space-x-2 mb-4">
         {project.teamMembers?.slice(0, 5).map((member) => (
           <Avatar key={member.id} className="border-2 border-border">
-            <AvatarFallback className="bg-gold-500/20 text-gold-500 text-xs font-semibold border border-gold-500/30">
+            <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold border border-primary/20">
               {member.firstName[0]}{member.lastName[0]}
             </AvatarFallback>
           </Avatar>
         ))}
-        <button className="w-8 h-8 rounded-full bg-gold-500/20 border-2 border-border flex items-center justify-center text-gold-500 hover:bg-gold-500/30 transition-colors">
+        <button className="w-8 h-8 rounded-full bg-primary/10 border-2 border-border flex items-center justify-center text-primary hover:bg-primary/20 transition-colors">
           <UserPlus className="w-4 h-4" />
         </button>
       </div>
@@ -78,7 +78,7 @@ export function TeamCard({ project, onClick, highlighted = false }: TeamCardProp
         </div>
         <div className="w-full bg-muted rounded-full h-2.5 overflow-hidden">
           <div
-            className="bg-gold-500 h-full rounded-full transition-all duration-500"
+            className="bg-primary h-full rounded-full transition-all duration-500"
             style={{ width: `${Math.min(project.progress, 100)}%` }}
           />
         </div>

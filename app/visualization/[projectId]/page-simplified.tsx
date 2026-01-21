@@ -1,4 +1,5 @@
 'use client'
+/* eslint-disable react-hooks/exhaustive-deps */
 
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
@@ -663,4 +664,3 @@ function ChartDialog({ open, onClose, onSave, chart, indicators }: ChartDialogPr
     </Dialog>
   )
 }
-

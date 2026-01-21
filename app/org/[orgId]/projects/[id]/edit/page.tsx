@@ -1,11 +1,10 @@
 'use client'
+/* eslint-disable react-hooks/exhaustive-deps */
 
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { Sidebar } from '@/components/Sidebar'
 import { Header } from '@/components/Header'
 import { TeamChat } from '@/components/TeamChat'
-import { useLayout } from '@/contexts/LayoutContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -45,7 +44,6 @@ export default function EditProjectPage() {
   const params = useParams()
   const orgId = params.orgId as string
   const projectId = params.id as string
-  const { sidebarCollapsed, chatCollapsed } = useLayout()
   const [currentStep, setCurrentStep] = useState(1)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -345,19 +343,12 @@ export default function EditProjectPage() {
 
   if (loading && !project) {
     return (
-      <div className="flex h-screen bg-background overflow-hidden">
-        <Sidebar orgId={orgId} />
-        <div className={cn(
-          "flex-1 flex flex-col overflow-hidden transition-all duration-300",
-          sidebarCollapsed ? "ml-20" : "ml-64",
-          chatCollapsed ? "mr-12" : "mr-80"
-        )}>
-          <Header title="Edit Project" />
-          <div className="flex-1 flex items-center justify-center">
-            <div className="flex flex-col items-center space-y-4">
-              <Loader2 className="w-8 h-8 animate-spin text-gold-500" />
-              <p className="text-muted-foreground">Loading project data...</p>
-            </div>
+      <div className="space-y-6">
+        <Header title="Edit Program" subtitle="Adjust scope, targets, and delivery cadence." />
+        <div className="flex items-center justify-center rounded-2xl border border-border/60 bg-card/60 p-12">
+          <div className="flex flex-col items-center space-y-4">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            <p className="text-muted-foreground">Loading program data...</p>
           </div>
         </div>
         <TeamChat orgId={orgId} />
@@ -367,20 +358,13 @@ export default function EditProjectPage() {
 
   if (!project) {
     return (
-      <div className="flex h-screen bg-background overflow-hidden">
-        <Sidebar orgId={orgId} />
-        <div className={cn(
-          "flex-1 flex flex-col overflow-hidden transition-all duration-300",
-          sidebarCollapsed ? "ml-20" : "ml-64",
-          chatCollapsed ? "mr-12" : "mr-80"
-        )}>
-          <Header title="Edit Project" />
-          <div className="flex-1 flex items-center justify-center">
-            <Alert variant="destructive" className="max-w-md">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>Project not found</AlertDescription>
-            </Alert>
-          </div>
+      <div className="space-y-6">
+        <Header title="Edit Program" subtitle="Adjust scope, targets, and delivery cadence." />
+        <div className="flex items-center justify-center rounded-2xl border border-border/60 bg-card/60 p-12">
+          <Alert variant="destructive" className="max-w-md">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>Project not found</AlertDescription>
+          </Alert>
         </div>
         <TeamChat orgId={orgId} />
       </div>
@@ -388,125 +372,118 @@ export default function EditProjectPage() {
   }
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
-      <Sidebar orgId={orgId} />
-      
-      <div className={cn(
-        "flex-1 flex flex-col overflow-hidden transition-all duration-300",
-        sidebarCollapsed ? "ml-20" : "ml-64",
-        chatCollapsed ? "mr-12" : "mr-80"
-      )}>
-        <Header title={`Edit: ${project.name}`} />
-        
-        <div className="flex-1 overflow-y-auto">
-          <div className="max-w-4xl mx-auto p-6">
-            {/* Header with back button and save status */}
-            <div className="flex items-center justify-between mb-6">
-              <Link
-                href={`/org/${orgId}/projects/${projectId}`}
-                className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                <span>Back to Project</span>
-              </Link>
-              <div className="flex items-center space-x-4">
-                {success && (
-                  <span className="text-sm text-gold-500 flex items-center space-x-1">
-                    <Check className="w-4 h-4" />
-                    <span>{success}</span>
-                  </span>
-                )}
-                {saving && (
-                  <span className="text-sm text-muted-foreground flex items-center space-x-1">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Saving draft...</span>
-                  </span>
-                )}
-                <Button
-                  type="button"
-                  onClick={saveDraft}
-                  variant="outline"
-                  size="sm"
-                  className="border-border"
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  Save Draft
-                </Button>
-              </div>
-            </div>
+    <div className="space-y-6">
+      <Header title={`Edit: ${project.name}`} subtitle="Adjust targets, teams, and delivery details." />
 
-            {/* Progress Bar */}
-            <div className="space-y-2 mb-6">
-              <div className="flex items-center justify-between text-sm text-muted-foreground">
-                <span>Progress</span>
-                <span>{Math.round(progress)}%</span>
-              </div>
-              <Progress value={progress} className="h-2" />
-            </div>
+      <div className="max-w-4xl space-y-6">
+        {/* Header with back button and save status */}
+        <div className="flex items-center justify-between mb-6">
+          <Link
+            href={`/org/${orgId}/projects/${projectId}`}
+            className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            <span>Back to Project</span>
+          </Link>
+          <div className="flex items-center space-x-4">
+            {success && (
+              <span className="text-sm text-primary flex items-center space-x-1">
+                <Check className="w-4 h-4" />
+                <span>{success}</span>
+              </span>
+            )}
+            {saving && (
+              <span className="text-sm text-muted-foreground flex items-center space-x-1">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Saving draft...</span>
+              </span>
+            )}
+            <Button
+              type="button"
+              onClick={saveDraft}
+              variant="outline"
+              size="sm"
+              className="border-border"
+            >
+              <Save className="w-4 h-4 mr-2" />
+              Save Draft
+            </Button>
+          </div>
+        </div>
 
-            {/* Step Indicators */}
-            <div className="flex items-center justify-between mb-8">
-              {STEPS.map((step, index) => (
-                <div key={step.id} className="flex items-center flex-1">
-                  <div className="flex flex-col items-center flex-1">
-                    <div
-                      className={cn(
-                        "w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all",
-                        currentStep > step.id
-                          ? 'bg-gold-500 border-gold-500 text-charcoal-900'
-                          : currentStep === step.id
-                          ? 'bg-gold-500/20 border-gold-500 text-gold-500'
+        {/* Progress Bar */}
+        <div className="space-y-2 mb-6">
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>Progress</span>
+            <span>{Math.round(progress)}%</span>
+          </div>
+          <Progress value={progress} className="h-2" />
+        </div>
+
+        <div className="bg-card border border-border/70 rounded-2xl p-6 shadow-sm">
+          {/* Step Indicators */}
+          <div className="flex items-center justify-between mb-8">
+            {STEPS.map((step, index) => (
+              <div key={step.id} className="flex items-center flex-1">
+                <div className="flex flex-col items-center flex-1">
+                  <div
+                    className={cn(
+                      "w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all",
+                      currentStep > step.id
+                        ? 'bg-primary border-primary text-primary-foreground'
+                        : currentStep === step.id
+                          ? 'bg-primary/10 border-primary text-primary'
                           : 'bg-muted border-border text-muted-foreground'
-                      )}
-                    >
-                      {currentStep > step.id ? (
-                        <Check className="w-5 h-5" />
-                      ) : (
-                        <span className="font-semibold">{step.id}</span>
-                      )}
-                    </div>
-                    <span
-                      className={cn(
-                        "text-xs mt-2 text-center",
-                        currentStep >= step.id ? 'text-foreground font-medium' : 'text-muted-foreground'
-                      )}
-                    >
-                      {step.title}
-                    </span>
+                    )}
+                  >
+                    {currentStep > step.id ? (
+                      <Check className="w-5 h-5" />
+                    ) : (
+                      <span className="font-semibold">{step.id}</span>
+                    )}
                   </div>
-                  {index < STEPS.length - 1 && (
-                    <div
-                      className={cn(
-                        "h-0.5 flex-1 mx-2",
-                        currentStep > step.id ? 'bg-gold-500' : 'bg-border'
-                      )}
-                    />
-                  )}
+                  <span
+                    className={cn(
+                      "text-xs mt-2 text-center",
+                      currentStep >= step.id ? 'text-foreground font-medium' : 'text-muted-foreground'
+                    )}
+                  >
+                    {step.title}
+                  </span>
                 </div>
-              ))}
-            </div>
+                {index < STEPS.length - 1 && (
+                  <div
+                    className={cn(
+                      "h-0.5 flex-1 mx-2",
+                      currentStep > step.id ? 'bg-primary' : 'bg-border'
+                    )}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
 
-            {/* Form Content */}
-            <div className="space-y-6">
-              {error && (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
+          {/* Form Content */}
+          <div className="space-y-6">
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
 
-              {/* Step 1: Project Information */}
-              {currentStep === 1 && (
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-foreground">Project Information</h3>
+            {/* Step 1: Project Information */}
+            {currentStep === 1 && (
+              <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-foreground">Program Information</h3>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="name" className="text-foreground">Project Name *</Label>
+                    <Label htmlFor="name" className="text-foreground">Program Name *</Label>
                     <Input
                       id="name"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      placeholder="Enter project name"
+                      placeholder="Enter program name"
                       required
                       className="bg-background border-border text-foreground"
                     />
@@ -518,9 +495,9 @@ export default function EditProjectPage() {
                       id="description"
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      placeholder="Describe your project..."
+                      placeholder="Describe your program..."
                       rows={4}
-                      className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold-500"
+                      className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                     />
                   </div>
 
@@ -563,7 +540,7 @@ export default function EditProjectPage() {
                         value={formData.managerId}
                         onChange={(e) => setFormData({ ...formData, managerId: e.target.value })}
                         required
-                        className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-gold-500"
+                        className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                       >
                         <option value="">Select a manager</option>
                         {users.map((user) => (
@@ -598,7 +575,7 @@ export default function EditProjectPage() {
                     </div>
 
                     {/* Team Members List */}
-                    <div className="max-h-64 overflow-y-auto border border-border rounded-md p-3 space-y-2 bg-muted/30">
+                    <div className="max-h-64 overflow-y-auto border border-border/70 rounded-xl p-3 space-y-2 bg-muted/20">
                       {(() => {
                         const availableMembers = users.filter(u => u.id !== formData.managerId)
                         const filteredMembers = teamSearchQuery
@@ -653,7 +630,7 @@ export default function EditProjectPage() {
                           return (
                             <div
                               key={userId}
-                              className="flex items-center space-x-1 px-2 py-1 bg-gold-500/20 border border-gold-500/30 rounded text-sm"
+                              className="flex items-center space-x-1 px-2 py-1 bg-primary/10 border border-primary/20 rounded text-sm"
                             >
                               <span className="text-foreground">
                                 {user.firstName} {user.lastName}
@@ -661,7 +638,7 @@ export default function EditProjectPage() {
                               <button
                                 type="button"
                                 onClick={() => toggleTeamMember(userId)}
-                                className="text-gold-600 hover:text-gold-700"
+                                className="text-primary hover:text-primary/80"
                               >
                                 <X className="w-3 h-3" />
                               </button>
@@ -696,7 +673,7 @@ export default function EditProjectPage() {
                   </p>
 
                   {indicators.length === 0 ? (
-                    <div className="text-center py-12 border border-border rounded-lg bg-card">
+                    <div className="text-center py-12 border border-border/70 rounded-2xl bg-muted/20">
                       <p className="text-muted-foreground mb-4">No indicators added yet</p>
                       <Button
                         type="button"
@@ -711,7 +688,7 @@ export default function EditProjectPage() {
                   ) : (
                     <div className="space-y-3 max-h-96 overflow-y-auto">
                       {indicators.map((indicator, index) => (
-                        <div key={index} className="border border-border rounded-lg p-4 bg-card">
+                        <div key={index} className="border border-border/70 rounded-xl p-4 bg-card">
                           <div className="flex items-center justify-between mb-3">
                             <h4 className="font-medium text-foreground">
                               Indicator {index + 1} {indicator.id && <span className="text-xs text-muted-foreground">(Existing)</span>}
@@ -746,7 +723,7 @@ export default function EditProjectPage() {
                                 onChange={(e) => updateIndicator(index, 'description', e.target.value)}
                                 placeholder="Describe what this indicator measures..."
                                 rows={2}
-                                className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold-500"
+                                className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                               />
                             </div>
 
@@ -756,7 +733,7 @@ export default function EditProjectPage() {
                                 <select
                                   value={indicator.type}
                                   onChange={(e) => updateIndicator(index, 'type', e.target.value as any)}
-                                  className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-gold-500"
+                                  className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                                 >
                                   <option value="quantitative">Quantitative</option>
                                   <option value="qualitative">Qualitative</option>
@@ -769,7 +746,7 @@ export default function EditProjectPage() {
                                   value={indicator.unit}
                                   onChange={(e) => updateIndicator(index, 'unit', e.target.value as any)}
                                   disabled={getAvailableUnits(indicator.type).length === 1}
-                                  className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-gold-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                  className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                   {getAvailableUnits(indicator.type).map((unit) => (
                                     <option key={unit} value={unit}>
@@ -886,7 +863,7 @@ export default function EditProjectPage() {
                   <Button
                     type="button"
                     onClick={nextStep}
-                    className="bg-gold-500 hover:bg-gold-600 text-charcoal-900"
+                    className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground"
                   >
                     Next
                     <ChevronRight className="w-4 h-4 ml-2" />
@@ -896,7 +873,7 @@ export default function EditProjectPage() {
                     type="button"
                     onClick={() => setShowConfirmDialog(true)}
                     disabled={loading}
-                    className="bg-gold-500 hover:bg-gold-600 text-charcoal-900"
+                    className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground"
                   >
                     <Check className="w-4 h-4 mr-2" />
                     Save Changes
@@ -904,7 +881,6 @@ export default function EditProjectPage() {
                 )}
               </div>
             </div>
-          </div>
         </div>
       </div>
 
@@ -915,7 +891,7 @@ export default function EditProjectPage() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2">
-              <AlertTriangle className="w-5 h-5 text-gold-500" />
+              <AlertTriangle className="w-5 h-5 text-primary" />
               <span>Confirm Project Update</span>
             </DialogTitle>
             <DialogDescription>
@@ -956,7 +932,7 @@ export default function EditProjectPage() {
               type="button"
               onClick={handleSubmit}
               disabled={loading}
-              className="bg-gold-500 hover:bg-gold-600 text-charcoal-900"
+              className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               {loading ? (
                 <>
@@ -976,4 +952,3 @@ export default function EditProjectPage() {
     </div>
   )
 }
-

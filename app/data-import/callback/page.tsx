@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Loader2, CheckCircle2, XCircle } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
@@ -13,6 +13,23 @@ export default function GoogleSheetsCallbackPage() {
   const searchParams = useSearchParams()
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
   const [message, setMessage] = useState('')
+
+  const handleOAuthCallback = useCallback(async (code: string, datasetId: string | undefined, orgId: string) => {
+    try {
+      await orgApi.post(orgId, 'data-import/google-oauth-callback', { code, datasetId })
+      setStatus('success')
+      setMessage('Google Sheets connected successfully! Redirecting...')
+      setTimeout(() => {
+        router.push(`/org/${orgId}/data-import`)
+      }, 1500)
+    } catch (error: any) {
+      setStatus('error')
+      setMessage(error.response?.data?.message || 'Failed to connect Google Sheets')
+      setTimeout(() => {
+        router.push(`/org/${orgId}/data-import`)
+      }, 3000)
+    }
+  }, [router])
 
   useEffect(() => {
     const code = searchParams.get('code')
@@ -44,24 +61,7 @@ export default function GoogleSheetsCallbackPage() {
         }
       }, 2000)
     }
-  }, [searchParams, router])
-
-  const handleOAuthCallback = async (code: string, datasetId: string | undefined, orgId: string) => {
-    try {
-      await orgApi.post(orgId, 'data-import/google-oauth-callback', { code, datasetId })
-      setStatus('success')
-      setMessage('Google Sheets connected successfully! Redirecting...')
-      setTimeout(() => {
-        router.push(`/org/${orgId}/data-import`)
-      }, 1500)
-    } catch (error: any) {
-      setStatus('error')
-      setMessage(error.response?.data?.message || 'Failed to connect Google Sheets')
-      setTimeout(() => {
-        router.push(`/org/${orgId}/data-import`)
-      }, 3000)
-    }
-  }
+  }, [searchParams, router, handleOAuthCallback])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -70,19 +70,19 @@ export default function GoogleSheetsCallbackPage() {
           <div className="text-center space-y-4">
             {status === 'loading' && (
               <>
-                <Loader2 className="w-12 h-12 animate-spin text-gold-500 mx-auto" />
+                <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto" />
                 <p className="text-foreground">Connecting Google Sheets...</p>
               </>
             )}
             {status === 'success' && (
               <>
-                <CheckCircle2 className="w-12 h-12 text-gold-500 mx-auto" />
+                <CheckCircle2 className="w-12 h-12 text-primary mx-auto" />
                 <p className="text-foreground">{message}</p>
               </>
             )}
             {status === 'error' && (
               <>
-                <XCircle className="w-12 h-12 text-crimson-500 mx-auto" />
+                <XCircle className="w-12 h-12 text-destructive mx-auto" />
                 <p className="text-foreground">{message}</p>
                 <p className="text-muted-foreground text-sm">Redirecting to data import...</p>
               </>
@@ -93,4 +93,3 @@ export default function GoogleSheetsCallbackPage() {
     </div>
   )
 }
-

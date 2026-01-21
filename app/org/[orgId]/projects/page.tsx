@@ -1,11 +1,10 @@
 'use client'
+/* eslint-disable react-hooks/exhaustive-deps */
 
 import { useEffect, useState } from 'react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
-import { Sidebar } from '@/components/Sidebar'
 import { Header } from '@/components/Header'
 import { TeamChat } from '@/components/TeamChat'
-import { useLayout } from '@/contexts/LayoutContext'
 import { Plus, Search, FileText, X, LayoutGrid, Columns3 } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -25,8 +24,6 @@ export default function ProjectsPage() {
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '')
   const [hasDraft, setHasDraft] = useState(false)
   const [viewMode, setViewMode] = useState<'grid' | 'kanban'>('grid')
-  const { sidebarCollapsed, chatCollapsed } = useLayout()
-
   useEffect(() => {
     checkForDraft()
   }, [])
@@ -92,24 +89,30 @@ export default function ProjectsPage() {
   }
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
-      <Sidebar orgId={orgId} />
-      
-      <div className={cn(
-        "flex-1 flex flex-col overflow-hidden transition-all duration-300",
-        sidebarCollapsed ? "ml-20" : "ml-64",
-        chatCollapsed ? "mr-12" : "mr-80"
-      )}>
-        <Header title="Projects" orgId={orgId} />
-        
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-6">
-            {hasDraft && (
-              <Alert className="mb-6 bg-gold-500/20 border-gold-500/30">
-                <FileText className="h-4 w-4 text-gold-500" />
+    <div className="space-y-6">
+      <Header
+        title="Programs"
+        subtitle="Portfolio tracking, milestones, and delivery cadence."
+        actions={
+          <Link href={`/org/${orgId}/projects/new`}>
+            <Button className="rounded-full bg-primary text-primary-foreground shadow-sm hover:bg-primary/90">
+              <Plus className="mr-2 h-4 w-4" />
+              New Program
+            </Button>
+          </Link>
+        }
+      />
+
+      <div>
+        {hasDraft && (
+              <Alert className="mb-6 border-primary/20 bg-primary/10">
+                <FileText className="h-4 w-4 text-primary" />
                 <AlertDescription className="flex items-center justify-between">
                   <span className="text-foreground">
-                    You have a saved draft. <Link href={`/org/${orgId}/projects/new`} className="text-gold-500 hover:text-gold-600 underline font-medium">Resume creating your project</Link>
+                    You have a saved draft.{' '}
+                    <Link href={`/org/${orgId}/projects/new`} className="text-primary underline font-medium">
+                      Resume creating your program
+                    </Link>
                   </span>
                   <Button
                     variant="ghost"
@@ -130,10 +133,10 @@ export default function ProjectsPage() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <input
                   type="text"
-                  placeholder="Search projects..."
+                  placeholder="Search programs..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2 w-full bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold-500"
+                  className="pl-10 pr-4 py-2 w-full bg-card border border-border/70 rounded-full text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                 />
               </div>
               <div className="flex items-center space-x-2">
@@ -144,7 +147,7 @@ export default function ProjectsPage() {
                     onClick={() => setViewMode('grid')}
                     className={cn(
                       "h-8 px-3",
-                      viewMode === 'grid' && "bg-gold-500 hover:bg-gold-600 text-charcoal-900"
+                      viewMode === 'grid' && "bg-primary text-primary-foreground hover:bg-primary/90"
                     )}
                   >
                     <LayoutGrid className="w-4 h-4 mr-1" />
@@ -156,20 +159,13 @@ export default function ProjectsPage() {
                     onClick={() => setViewMode('kanban')}
                     className={cn(
                       "h-8 px-3",
-                      viewMode === 'kanban' && "bg-gold-500 hover:bg-gold-600 text-charcoal-900"
+                      viewMode === 'kanban' && "bg-primary text-primary-foreground hover:bg-primary/90"
                     )}
                   >
                     <Columns3 className="w-4 h-4 mr-1" />
                     Kanban
                   </Button>
                 </div>
-                <Link
-                  href={`/org/${orgId}/projects/new`}
-                  className="flex items-center space-x-2 px-4 py-2 bg-gold-500 hover:bg-gold-600 text-charcoal-900 rounded-lg transition-colors"
-                >
-                  <Plus className="w-5 h-5" />
-                  <span>New Project</span>
-                </Link>
               </div>
             </div>
 
@@ -182,7 +178,7 @@ export default function ProjectsPage() {
                     <Link
                       key={project.id}
                       href={`/org/${orgId}/projects/${project.id}`}
-                      className="bg-card rounded-lg border border-border p-6 hover:shadow-lg transition-shadow"
+                      className="bg-card rounded-xl border border-border/70 p-6 hover:shadow-lg transition-shadow"
                     >
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
@@ -194,13 +190,13 @@ export default function ProjectsPage() {
                           </p>
                         </div>
                         <span
-                          className={`px-2 py-1 text-xs font-medium rounded ${
+                          className={`px-2 py-1 text-xs font-medium rounded-full ${
                             project.status === 'active'
-                              ? 'bg-gold-500/20 text-gold-600 dark:text-gold-500 border border-gold-500/30'
+                              ? 'bg-primary/10 text-primary border border-primary/20'
                               : project.status === 'completed'
-                              ? 'bg-gold-500/20 text-gold-600 dark:text-gold-500 border border-gold-500/30'
+                              ? 'bg-primary/10 text-primary border border-primary/20'
                               : project.status === 'on_hold'
-                              ? 'bg-crimson-500/20 text-crimson-600 dark:text-crimson-500 border border-crimson-500/30'
+                              ? 'bg-destructive/10 text-destructive border border-destructive/20'
                               : 'bg-muted text-muted-foreground border border-border'
                           }`}
                         >
@@ -217,7 +213,7 @@ export default function ProjectsPage() {
                         </div>
                         <div className="w-full bg-muted rounded-full h-2">
                           <div
-                            className="bg-gold-500 h-2 rounded-full transition-all"
+                            className="bg-primary h-2 rounded-full transition-all"
                             style={{ width: `${project.progress}%` }}
                           />
                         </div>
@@ -232,7 +228,7 @@ export default function ProjectsPage() {
                           )}
                         </div>
                         <div className="flex items-center space-x-1">
-                          <span>👥</span>
+                          <span>Team</span>
                           <span>{project.teamMembers?.length || 0}</span>
                         </div>
                       </div>
@@ -246,20 +242,17 @@ export default function ProjectsPage() {
                       {searchQuery ? 'No projects found matching your search.' : 'No projects yet.'}
                     </p>
                     <Link href={`/org/${orgId}/projects/new`}>
-                      <button className="px-4 py-2 bg-gold-500 hover:bg-gold-600 text-charcoal-900 rounded-lg transition-colors">
-                        Create Your First Project
-                      </button>
+                      <Button className="rounded-full bg-primary text-primary-foreground">
+                        Create Your First Program
+                      </Button>
                     </Link>
                   </div>
                 )}
               </>
             )}
-          </div>
-        </div>
       </div>
 
       <TeamChat orgId={orgId} />
     </div>
   )
 }
-

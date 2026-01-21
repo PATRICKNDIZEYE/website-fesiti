@@ -152,8 +152,8 @@ export function ExcelUploader({ onSuccess, onCancel, orgId }: ExcelUploaderProps
           <div
             className={`mt-2 border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
               dragActive
-                ? 'border-gold-500 bg-gold-500/10'
-                : 'border-border hover:border-gold-500/50'
+                ? 'border-primary bg-primary/10'
+                : 'border-border hover:border-primary/40'
             }`}
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
@@ -162,7 +162,7 @@ export function ExcelUploader({ onSuccess, onCancel, orgId }: ExcelUploaderProps
           >
             {file ? (
               <div className="flex items-center justify-center space-x-2">
-                <FileSpreadsheet className="w-8 h-8 text-gold-500" />
+                <FileSpreadsheet className="w-8 h-8 text-primary" />
                 <div className="flex-1 text-left">
                   <p className="font-medium text-foreground">{file.name}</p>
                   <p className="text-sm text-muted-foreground">
@@ -230,4 +230,3 @@ export function ExcelUploader({ onSuccess, onCancel, orgId }: ExcelUploaderProps
     </div>
   )
 }
-

@@ -40,8 +40,8 @@ interface ProjectKanbanProps {
 
 const statusColumns: { id: ProjectStatus; label: string; color: string }[] = [
   { id: 'planning', label: 'Planning', color: 'bg-blue-500/20 text-blue-600 border-blue-500/30' },
-  { id: 'active', label: 'Active', color: 'bg-gold-500/20 text-gold-600 border-gold-500/30' },
-  { id: 'on_hold', label: 'On Hold', color: 'bg-crimson-500/20 text-crimson-600 border-crimson-500/30' },
+  { id: 'active', label: 'Active', color: 'bg-primary/10 text-primary border-primary/20' },
+  { id: 'on_hold', label: 'On Hold', color: 'bg-destructive/10 text-destructive border-destructive/20' },
   { id: 'completed', label: 'Completed', color: 'bg-green-500/20 text-green-600 border-green-500/30' },
   { id: 'cancelled', label: 'Cancelled', color: 'bg-gray-500/20 text-gray-600 border-gray-500/30' },
 ]
@@ -97,7 +97,7 @@ function ProjectCard({ project, isDragging, orgId }: { project: Project; isDragg
             </div>
             <div className="w-full bg-muted rounded-full h-1.5">
               <div
-                className="bg-gold-500 h-1.5 rounded-full transition-all"
+                className="bg-primary h-1.5 rounded-full transition-all"
                 style={{ width: `${project.progress}%` }}
               />
             </div>
@@ -107,7 +107,7 @@ function ProjectCard({ project, isDragging, orgId }: { project: Project; isDragg
             <div className="flex items-center space-x-2">
               {project.manager && (
                 <Avatar className="w-6 h-6 border border-border">
-                  <AvatarFallback className="bg-gold-500/20 text-gold-500 text-xs border border-gold-500/30">
+                  <AvatarFallback className="bg-primary/10 text-primary text-xs border border-primary/20">
                     {project.manager.firstName[0]}{project.manager.lastName[0]}
                   </AvatarFallback>
                 </Avatar>
@@ -178,7 +178,7 @@ function StatusColumn({
       ref={setNodeRef}
       className={cn(
         "flex-1 min-w-[280px] bg-muted/30 rounded-lg p-4 transition-colors",
-        isOver && "bg-muted/50 ring-2 ring-gold-500"
+        isOver && "bg-muted/50 ring-2 ring-primary/40"
       )}
     >
       <div className="flex items-center justify-between mb-4">
@@ -331,4 +331,3 @@ export function ProjectKanban({ projects, onUpdate, orgId }: ProjectKanbanProps)
     </DndContext>
   )
 }
-

@@ -1,13 +1,11 @@
 'use client'
+/* eslint-disable react-hooks/exhaustive-deps */
 
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { Sidebar } from '@/components/Sidebar'
 import { Header } from '@/components/Header'
 import { TeamChat } from '@/components/TeamChat'
-import { useLayout } from '@/contexts/LayoutContext'
-import { cn } from '@/lib/utils'
-import { Plus, Search, Edit2, Trash2, UserPlus, Loader2, X, Check } from 'lucide-react'
+import { Search, Edit2, Trash2, UserPlus, Loader2, X, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -35,7 +33,6 @@ export default function UsersPage() {
   const router = useRouter()
   const params = useParams()
   const orgId = params.orgId as string
-  const { sidebarCollapsed, chatCollapsed } = useLayout()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -203,7 +200,7 @@ export default function UsersPage() {
       case 'admin':
         return 'bg-red-500/20 text-red-600 border-red-500/30'
       case 'manager':
-        return 'bg-gold-500/20 text-gold-600 border-gold-500/30'
+        return 'bg-primary/10 text-primary border-primary/20'
       case 'field_staff':
         return 'bg-blue-500/20 text-blue-600 border-blue-500/30'
       default:
@@ -234,7 +231,7 @@ export default function UsersPage() {
   }
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
+    <div className="space-y-6">
       <ConfirmationModal
         open={showDeleteModal}
         onOpenChange={setShowDeleteModal}
@@ -246,130 +243,116 @@ export default function UsersPage() {
         cancelText="Cancel"
       />
       
-      <Sidebar orgId={orgId} />
-      
-      <div className={cn(
-        "flex-1 flex flex-col overflow-hidden transition-all duration-300",
-        sidebarCollapsed ? "ml-20" : "ml-64",
-        chatCollapsed ? "mr-12" : "mr-80"
-      )}>
-        <Header title="User Management" />
-        
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-6">
-            <div className="mb-6 flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold text-foreground mb-2">Users</h1>
-                <p className="text-muted-foreground">Manage system users and their permissions</p>
-              </div>
-              <Button
-                onClick={() => setShowCreateDialog(true)}
-                className="bg-gold-500 hover:bg-gold-600 text-charcoal-900"
-              >
-                <UserPlus className="w-4 h-4 mr-2" />
-                Add User
-              </Button>
-            </div>
+      <Header
+        title="User Management"
+        subtitle="Access control, roles, and permission settings."
+        actions={
+          <Button
+            onClick={() => setShowCreateDialog(true)}
+            className="rounded-full bg-primary text-primary-foreground shadow-sm hover:bg-primary/90"
+          >
+            <UserPlus className="w-4 h-4 mr-2" />
+            Add User
+          </Button>
+        }
+      />
 
-            <div className="mb-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search users..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
+      <div className="space-y-4">
+        <div className="relative max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Search users..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 rounded-full border-border/70 bg-card"
+          />
+        </div>
 
-            <div className="bg-card rounded-lg border border-border overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-muted/50 border-b border-border">
-                    <tr>
-                      <th className="text-left p-4 text-sm font-semibold text-foreground">User</th>
-                      <th className="text-left p-4 text-sm font-semibold text-foreground">Email</th>
-                      <th className="text-left p-4 text-sm font-semibold text-foreground">Role</th>
-                      <th className="text-left p-4 text-sm font-semibold text-foreground">Status</th>
-                      <th className="text-left p-4 text-sm font-semibold text-foreground">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredUsers.length === 0 ? (
-                      <tr>
-                        <td colSpan={5} className="p-8 text-center text-muted-foreground">
-                          {searchQuery ? 'No users found' : 'No users yet'}
-                        </td>
-                      </tr>
-                    ) : (
-                      filteredUsers.map((user) => (
-                        <tr key={user.id} className="border-b border-border hover:bg-muted/50 transition-colors">
-                          <td className="p-4">
-                            <div className="flex items-center space-x-3">
-                              <Avatar>
-                                <AvatarFallback className="bg-gold-500/20 text-gold-500 border border-gold-500/30">
-                                  {getInitials(user)}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <p className="font-medium text-foreground">
-                                  {user.firstName} {user.lastName}
-                                </p>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="p-4 text-sm text-muted-foreground">{user.email}</td>
-                          <td className="p-4">
-                            <Badge className={getRoleColor(user.role)}>
-                              {user.role.replace('_', ' ')}
-                            </Badge>
-                          </td>
-                          <td className="p-4">
-                            <Badge
-                              variant={user.isActive ? 'default' : 'secondary'}
-                              className="cursor-pointer"
-                              onClick={() => handleToggleActive(user)}
+        <div className="bg-card rounded-2xl border border-border/70 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-muted/50 border-b border-border/70">
+                <tr>
+                  <th className="text-left p-4 text-sm font-semibold text-foreground">User</th>
+                  <th className="text-left p-4 text-sm font-semibold text-foreground">Email</th>
+                  <th className="text-left p-4 text-sm font-semibold text-foreground">Role</th>
+                  <th className="text-left p-4 text-sm font-semibold text-foreground">Status</th>
+                  <th className="text-left p-4 text-sm font-semibold text-foreground">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredUsers.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="p-8 text-center text-muted-foreground">
+                      {searchQuery ? 'No users found' : 'No users yet'}
+                    </td>
+                  </tr>
+                ) : (
+                  filteredUsers.map((user) => (
+                    <tr key={user.id} className="border-b border-border/60 hover:bg-muted/40 transition-colors">
+                      <td className="p-4">
+                        <div className="flex items-center space-x-3">
+                          <Avatar>
+                            <AvatarFallback className="bg-primary/10 text-primary border border-primary/20">
+                              {getInitials(user)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium text-foreground">
+                              {user.firstName} {user.lastName}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-4 text-sm text-muted-foreground">{user.email}</td>
+                      <td className="p-4">
+                        <Badge className={getRoleColor(user.role)}>
+                          {user.role.replace('_', ' ')}
+                        </Badge>
+                      </td>
+                      <td className="p-4">
+                        <Badge
+                          variant={user.isActive ? 'default' : 'secondary'}
+                          className="cursor-pointer"
+                          onClick={() => handleToggleActive(user)}
+                        >
+                          {user.isActive ? (
+                            <>
+                              <Check className="w-3 h-3 mr-1" />
+                              Active
+                            </>
+                          ) : (
+                            'Inactive'
+                          )}
+                        </Badge>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => openEditDialog(user)}
+                            className="h-8 w-8"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </Button>
+                          {currentUser?.id !== user.id && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteClick(user.id)}
+                              className="h-8 w-8 text-destructive hover:text-destructive/80"
                             >
-                              {user.isActive ? (
-                                <>
-                                  <Check className="w-3 h-3 mr-1" />
-                                  Active
-                                </>
-                              ) : (
-                                'Inactive'
-                              )}
-                            </Badge>
-                          </td>
-                          <td className="p-4">
-                            <div className="flex items-center space-x-2">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => openEditDialog(user)}
-                                className="h-8 w-8"
-                              >
-                                <Edit2 className="w-4 h-4" />
-                              </Button>
-                              {currentUser?.id !== user.id && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleDeleteClick(user.id)}
-                                  className="h-8 w-8 text-crimson-500 hover:text-crimson-600"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -551,4 +534,3 @@ export default function UsersPage() {
     </div>
   )
 }
-

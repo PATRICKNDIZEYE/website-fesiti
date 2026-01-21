@@ -1,6 +1,6 @@
 import axios, { AxiosRequestConfig } from 'axios'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:57959'
 
 const api = axios.create({
   baseURL: API_URL,
@@ -15,7 +15,7 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
-  
+
   // Extract organizationId from URL if present (for /org/:orgId routes)
   // This will be handled by the route structure, but we can also get it from user data
   const userStr = localStorage.getItem('user')
@@ -31,7 +31,7 @@ api.interceptors.request.use((config) => {
       // Ignore parsing errors
     }
   }
-  
+
   return config
 })
 

@@ -72,8 +72,8 @@ export default function ForgotPasswordPage() {
 
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gold-500 rounded-2xl mb-4 shadow-lg">
-            <span className="text-charcoal-900 dark:text-charcoal-900 font-bold text-2xl">T</span>
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl mb-4 shadow-lg">
+            <span className="text-primary-foreground font-bold text-2xl">T</span>
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-2">Forgot Password</h1>
           <p className="text-muted-foreground">Enter your email to reset your password</p>
@@ -89,8 +89,8 @@ export default function ForgotPasswordPage() {
           <CardContent>
             {success ? (
               <div className="space-y-4">
-                <Alert className="bg-gold-500/20 border-gold-500/30">
-                  <CheckCircle2 className="h-4 w-4 text-gold-500" />
+                <Alert className="bg-primary/10 border-primary/20">
+                  <CheckCircle2 className="h-4 w-4 text-primary" />
                   <AlertDescription className="text-foreground">
                     If an account with that email exists, we&apos;ve sent a password reset link.
                   </AlertDescription>
@@ -98,7 +98,7 @@ export default function ForgotPasswordPage() {
                 {resetUrl && process.env.NODE_ENV === 'development' && (
                   <div className="p-4 bg-muted rounded-lg">
                     <p className="text-xs text-muted-foreground mb-2">Development Mode - Reset Link:</p>
-                    <a href={resetUrl} className="text-gold-500 text-sm break-all hover:underline">
+                    <a href={resetUrl} className="text-primary text-sm break-all hover:underline">
                       {resetUrl}
                     </a>
                   </div>
@@ -135,7 +135,7 @@ export default function ForgotPasswordPage() {
                   </div>
                 </div>
 
-                <Button type="submit" className="w-full bg-gold-500 hover:bg-gold-600 text-charcoal-900" size="lg" disabled={loading}>
+                <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" size="lg" disabled={loading}>
                   {loading ? 'Sending...' : 'Send Reset Link'}
                 </Button>
               </form>
@@ -144,7 +144,7 @@ export default function ForgotPasswordPage() {
           <CardFooter className="flex flex-col space-y-4">
             <div className="text-sm text-center text-muted-foreground">
               Remember your password?{' '}
-              <Link href="/login" className="text-gold-500 hover:text-gold-600 font-medium">
+              <Link href="/login" className="text-primary hover:text-primary/80 font-medium">
                 Sign in
               </Link>
             </div>
@@ -154,4 +154,3 @@ export default function ForgotPasswordPage() {
     </div>
   )
 }
-

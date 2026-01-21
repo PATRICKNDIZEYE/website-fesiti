@@ -1,11 +1,10 @@
 'use client'
+/* eslint-disable react-hooks/exhaustive-deps */
 
 import { useEffect, useState, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { Sidebar } from '@/components/Sidebar'
 import { Header } from '@/components/Header'
 import { TeamChat } from '@/components/TeamChat'
-import { useLayout } from '@/contexts/LayoutContext'
 import { Edit2, Save, X, Camera, Mail, Phone, MapPin, Briefcase, Building, Link as LinkIcon, Twitter, Linkedin, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,7 +12,6 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import { cn } from '@/lib/utils'
 import { orgApi } from '@/lib/api-helpers'
 import api from '@/lib/api'
 
@@ -39,7 +37,6 @@ export default function ProfilePage() {
   const router = useRouter()
   const params = useParams()
   const orgId = params.orgId as string
-  const { sidebarCollapsed, chatCollapsed } = useLayout()
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
@@ -151,12 +148,12 @@ export default function ProfilePage() {
         const fullAvatarUrl = `${apiUrl}${response.data.avatar}`
         setUser({ ...user, avatar: fullAvatarUrl })
         
-        // Update localStorage so Sidebar can pick it up
+        // Update localStorage so navigation can pick it up
         const userStr = localStorage.getItem('user')
         if (userStr) {
           try {
             const userData = JSON.parse(userStr)
-            userData.avatar = response.data.avatar // Store relative path, Sidebar will construct full URL
+            userData.avatar = response.data.avatar // Store relative path for profile and nav
             localStorage.setItem('user', JSON.stringify(userData))
           } catch (error) {
             console.error('Failed to update user in localStorage:', error)
@@ -197,7 +194,7 @@ export default function ProfilePage() {
       case 'admin':
         return 'bg-red-500/20 text-red-600 border-red-500/30'
       case 'manager':
-        return 'bg-gold-500/20 text-gold-600 border-gold-500/30'
+        return 'bg-primary/10 text-primary border-primary/20'
       case 'field_staff':
         return 'bg-blue-500/20 text-blue-600 border-blue-500/30'
       default:
@@ -224,20 +221,12 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
-      <Sidebar orgId={orgId} />
-      
-      <div className={cn(
-        "flex-1 flex flex-col overflow-hidden transition-all duration-300",
-        sidebarCollapsed ? "ml-20" : "ml-64",
-        chatCollapsed ? "mr-12" : "mr-80"
-      )}>
-        <Header title="Profile" />
-        
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-6 max-w-4xl mx-auto">
+    <div className="space-y-6">
+      <Header title="Profile" subtitle="Manage identity, credentials, and personal information." />
+
+      <div className="max-w-4xl space-y-6">
             {/* Profile Header */}
-            <div className="bg-card rounded-lg border border-border p-8 mb-6">
+            <div className="bg-card rounded-2xl border border-border/70 p-8">
               <div className="flex items-start justify-between mb-6">
                 <div className="flex items-center space-x-6">
                   <div className="relative">
@@ -253,7 +242,7 @@ export default function ProfilePage() {
                           e.currentTarget.style.display = 'none'
                         }}
                       />
-                      <AvatarFallback className="bg-gold-500/20 text-gold-500 text-3xl font-bold border border-gold-500/30">
+                      <AvatarFallback className="bg-primary/10 text-primary text-3xl font-bold border border-primary/20">
                         {getInitials(user)}
                       </AvatarFallback>
                     </Avatar>
@@ -340,7 +329,7 @@ export default function ProfilePage() {
                       <Button
                         onClick={handleSave}
                         disabled={saving}
-                        className="bg-gold-500 hover:bg-gold-600 text-charcoal-900"
+                        className="bg-primary hover:bg-primary/90 text-primary-foreground"
                       >
                         {saving ? (
                           <>
@@ -358,7 +347,7 @@ export default function ProfilePage() {
                   ) : (
                     <Button
                       onClick={() => setEditing(true)}
-                      className="bg-gold-500 hover:bg-gold-600 text-charcoal-900"
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground"
                     >
                       <Edit2 className="w-4 h-4 mr-2" />
                       Edit Profile
@@ -553,12 +542,9 @@ export default function ProfilePage() {
                 </div>
               )}
             </div>
-          </div>
-        </div>
       </div>
 
       <TeamChat orgId={orgId} />
     </div>
   )
 }
-

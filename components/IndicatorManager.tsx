@@ -1,4 +1,5 @@
 'use client'
+/* eslint-disable react-hooks/exhaustive-deps */
 
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
@@ -74,7 +75,7 @@ export function IndicatorManager({ projectId, onUpdate, orgId }: IndicatorManage
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <Loader2 className="w-6 h-6 animate-spin text-gold-500" />
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
       </div>
     )
   }
@@ -266,7 +267,7 @@ function AddIndicatorForm({
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             placeholder="Describe what this indicator measures..."
             rows={2}
-            className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold-500"
+            className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
         </div>
 
@@ -276,7 +277,7 @@ function AddIndicatorForm({
                             <select
                               value={formData.type}
                               onChange={(e) => updateFormData('type', e.target.value)}
-                              className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-gold-500"
+                              className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                             >
                               <option value="quantitative">Quantitative</option>
                               <option value="qualitative">Qualitative</option>
@@ -289,7 +290,7 @@ function AddIndicatorForm({
                               value={formData.unit}
                               onChange={(e) => updateFormData('unit', e.target.value)}
                               disabled={getAvailableUnits(formData.type).length === 1}
-                              className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-gold-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               {getAvailableUnits(formData.type).map((unit) => (
                                 <option key={unit} value={unit}>
@@ -309,7 +310,7 @@ function AddIndicatorForm({
           <Button type="button" variant="outline" onClick={onCancel} className="border-border">
             Cancel
           </Button>
-          <Button type="submit" disabled={loading} className="bg-gold-500 hover:bg-gold-600 text-charcoal-900">
+          <Button type="submit" disabled={loading} className="bg-primary hover:bg-primary/90 text-primary-foreground">
             {loading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -363,7 +364,7 @@ function IndicatorCard({
             onClick={() => setShowTargetForm(!showTargetForm)}
             variant="ghost"
             size="sm"
-            className="text-gold-500 hover:text-gold-600"
+            className="text-primary hover:text-primary/80"
           >
             <Target className="w-4 h-4 mr-1" />
             Targets
@@ -372,7 +373,7 @@ function IndicatorCard({
             onClick={() => onDelete(indicator.id)}
             variant="ghost"
             size="sm"
-            className="text-crimson-500 hover:text-crimson-600"
+            className="text-destructive hover:text-destructive/80"
           >
             <Trash2 className="w-4 h-4" />
           </Button>
@@ -524,7 +525,7 @@ function TargetManager({
                 onClick={() => handleDeleteClick(target.id)}
                 variant="ghost"
                 size="sm"
-                className="h-6 w-6 p-0 text-crimson-500"
+                className="h-6 w-6 p-0 text-destructive"
               >
                 <X className="w-3 h-3" />
               </Button>
@@ -629,7 +630,7 @@ function AddTargetForm({
           <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
             Cancel
           </Button>
-          <Button type="submit" disabled={loading} size="sm" className="bg-gold-500 hover:bg-gold-600 text-charcoal-900">
+          <Button type="submit" disabled={loading} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground">
             {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Add'}
           </Button>
         </div>
@@ -637,4 +638,3 @@ function AddTargetForm({
     </div>
   )
 }
-

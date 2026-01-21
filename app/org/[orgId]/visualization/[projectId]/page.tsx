@@ -1,4 +1,5 @@
 'use client'
+/* eslint-disable react-hooks/exhaustive-deps */
 
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
@@ -19,10 +20,8 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Sidebar } from '@/components/Sidebar'
 import { Header } from '@/components/Header'
 import { TeamChat } from '@/components/TeamChat'
-import { useLayout } from '@/contexts/LayoutContext'
 import { cn } from '@/lib/utils'
 import {
   BarChart,
@@ -124,7 +123,6 @@ export default function ProjectVisualizationPage() {
   const params = useParams()
   const orgId = params.orgId as string
   const projectId = params.projectId as string
-  const { sidebarCollapsed, chatCollapsed } = useLayout()
   const [project, setProject] = useState<Project | null>(null)
   const [loading, setLoading] = useState(true)
   const [charts, setCharts] = useState<Chart[]>([])
@@ -1500,17 +1498,10 @@ export default function ProjectVisualizationPage() {
 
   if (loading) {
     return (
-      <div className="flex h-screen bg-background overflow-hidden">
-        <Sidebar orgId={orgId} />
-        <div className={cn(
-          "flex-1 flex flex-col overflow-hidden transition-all duration-300",
-          sidebarCollapsed ? "ml-20" : "ml-64",
-          chatCollapsed ? "mr-12" : "mr-80"
-        )}>
-          <Header title="Project Visualization" />
-          <div className="flex-1 flex items-center justify-center">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          </div>
+      <div className="space-y-6">
+        <Header title="Project Visualization" subtitle="Build and manage indicator dashboards." />
+        <div className="flex items-center justify-center rounded-2xl border border-border/60 bg-card/60 p-12">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
         <TeamChat orgId={orgId} />
       </div>
@@ -1519,17 +1510,10 @@ export default function ProjectVisualizationPage() {
 
   if (!project) {
     return (
-      <div className="flex h-screen bg-background overflow-hidden">
-        <Sidebar orgId={orgId} />
-        <div className={cn(
-          "flex-1 flex flex-col overflow-hidden transition-all duration-300",
-          sidebarCollapsed ? "ml-20" : "ml-64",
-          chatCollapsed ? "mr-12" : "mr-80"
-        )}>
-          <Header title="Project Visualization" />
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-muted-foreground">Project not found</div>
-          </div>
+      <div className="space-y-6">
+        <Header title="Project Visualization" subtitle="Build and manage indicator dashboards." />
+        <div className="flex items-center justify-center rounded-2xl border border-border/60 bg-card/60 p-12">
+          <div className="text-muted-foreground">Project not found</div>
         </div>
         <TeamChat orgId={orgId} />
       </div>
@@ -1537,19 +1521,11 @@ export default function ProjectVisualizationPage() {
   }
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
-      <Sidebar orgId={orgId} />
-      
-      <div className={cn(
-        "flex-1 flex flex-col overflow-hidden transition-all duration-300",
-        sidebarCollapsed ? "ml-20" : "ml-64",
-        chatCollapsed ? "mr-12" : "mr-80"
-      )}>
-        <Header title={`Visualization: ${project.name}`} />
-        
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-6">
+    <div className="space-y-6">
+      <Header title={`Visualization: ${project.name}`} subtitle="Customize charts and reporting views." />
+
+      <div className="space-y-6">
+            <div className="flex flex-col gap-4 rounded-2xl border border-border/70 bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
               <Link
                 href={`/org/${orgId}/visualization`}
                 className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors"
@@ -1557,11 +1533,11 @@ export default function ProjectVisualizationPage() {
                 <ArrowLeft className="w-4 h-4" />
                 <span>Back to All Visualizations</span>
               </Link>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Button
                   variant="outline"
                   onClick={() => setShowShareLinks(!showShareLinks)}
-                  className="border-border"
+                  className="rounded-full border-border"
                 >
                   <Share2 className="w-4 h-4 mr-2" />
                   Share Links ({shareLinks.length})
@@ -1569,7 +1545,7 @@ export default function ProjectVisualizationPage() {
                 <Button
                   variant="outline"
                   onClick={copyShareLink}
-                  className="border-border"
+                  className="rounded-full border-border"
                 >
                   {linkCopied ? (
                     <>
@@ -1585,7 +1561,7 @@ export default function ProjectVisualizationPage() {
                 </Button>
                 <Button
                   onClick={() => setShowAddDialog(true)}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                  className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Add Chart
@@ -1594,7 +1570,7 @@ export default function ProjectVisualizationPage() {
             </div>
 
             {showShareLinks && (
-              <div className="mb-6 bg-card border border-border rounded-lg p-6">
+              <div className="mb-6 bg-card border border-border/70 rounded-2xl p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-foreground">Share Links</h3>
                   <Button
@@ -1611,7 +1587,7 @@ export default function ProjectVisualizationPage() {
                 ) : (
                   <div className="space-y-3">
                     {shareLinks.map((link) => (
-                      <div key={link.shareId} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                      <div key={link.shareId} className="flex items-center justify-between p-3 bg-muted/30 rounded-xl">
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-mono text-foreground truncate">{link.shareUrl}</p>
                           <p className="text-xs text-muted-foreground">
@@ -1648,7 +1624,7 @@ export default function ProjectVisualizationPage() {
             )}
 
             {charts.length === 0 ? (
-              <div className="bg-card border border-border rounded-lg p-12 text-center">
+              <div className="bg-card border border-border/70 rounded-2xl p-12 text-center">
                 <p className="text-muted-foreground mb-4">No charts created yet</p>
                 <Button
                   onClick={() => setShowAddDialog(true)}
@@ -1682,8 +1658,6 @@ export default function ProjectVisualizationPage() {
                 </SortableContext>
               </DndContext>
             )}
-          </div>
-        </div>
       </div>
 
       <TeamChat orgId={orgId} />

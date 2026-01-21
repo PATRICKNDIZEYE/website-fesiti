@@ -1,4 +1,5 @@
 'use client'
+/* eslint-disable react-hooks/exhaustive-deps */
 
 import { useState, useEffect } from 'react'
 import { ExternalLink, Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
@@ -221,4 +222,3 @@ export function GoogleSheetsConnector({
     </div>
   )
 }
-

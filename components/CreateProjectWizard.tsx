@@ -248,9 +248,9 @@ export function CreateProjectWizard({ open, onOpenChange, onSuccess }: CreatePro
                 <div
                   className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all ${
                     currentStep > step.id
-                      ? 'bg-gold-500 border-gold-500 text-charcoal-900'
-                      : currentStep === step.id
-                      ? 'bg-gold-500/20 border-gold-500 text-gold-500'
+                      ? 'bg-primary border-primary text-primary-foreground'
+                    : currentStep === step.id
+                      ? 'bg-primary/10 border-primary text-primary'
                       : 'bg-muted border-border text-muted-foreground'
                   }`}
                 >
@@ -271,7 +271,7 @@ export function CreateProjectWizard({ open, onOpenChange, onSuccess }: CreatePro
               {index < STEPS.length - 1 && (
                 <div
                   className={`h-0.5 flex-1 mx-2 ${
-                    currentStep > step.id ? 'bg-gold-500' : 'bg-border'
+                    currentStep > step.id ? 'bg-primary' : 'bg-border'
                   }`}
                 />
               )}
@@ -314,7 +314,7 @@ export function CreateProjectWizard({ open, onOpenChange, onSuccess }: CreatePro
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     placeholder="Describe your project..."
                     rows={4}
-                    className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold-500"
+                    className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                   />
                 </div>
 
@@ -357,7 +357,7 @@ export function CreateProjectWizard({ open, onOpenChange, onSuccess }: CreatePro
                       value={formData.managerId}
                       onChange={(e) => setFormData({ ...formData, managerId: e.target.value })}
                       required
-                      className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-gold-500"
+                      className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                     >
                       <option value="">Select a manager</option>
                       {users.map((user) => (
@@ -465,7 +465,7 @@ export function CreateProjectWizard({ open, onOpenChange, onSuccess }: CreatePro
                               onChange={(e) => updateIndicator(index, 'description', e.target.value)}
                               placeholder="Describe what this indicator measures..."
                               rows={2}
-                              className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold-500"
+                              className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                             />
                           </div>
 
@@ -475,7 +475,7 @@ export function CreateProjectWizard({ open, onOpenChange, onSuccess }: CreatePro
                               <select
                                 value={indicator.type}
                                 onChange={(e) => updateIndicator(index, 'type', e.target.value as any)}
-                                className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-gold-500"
+                                className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                               >
                                 <option value="quantitative">Quantitative</option>
                                 <option value="qualitative">Qualitative</option>
@@ -487,7 +487,7 @@ export function CreateProjectWizard({ open, onOpenChange, onSuccess }: CreatePro
                               <select
                                 value={indicator.unit}
                                 onChange={(e) => updateIndicator(index, 'unit', e.target.value as any)}
-                                className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-gold-500"
+                                className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                               >
                                 <option value="number">Number</option>
                                 <option value="percentage">Percentage</option>
@@ -595,7 +595,7 @@ export function CreateProjectWizard({ open, onOpenChange, onSuccess }: CreatePro
                 <Button
                   type="button"
                   onClick={nextStep}
-                  className="bg-gold-500 hover:bg-gold-600 text-charcoal-900"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
                 >
                   Next
                   <ChevronRight className="w-4 h-4 ml-2" />
@@ -604,7 +604,7 @@ export function CreateProjectWizard({ open, onOpenChange, onSuccess }: CreatePro
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="bg-gold-500 hover:bg-gold-600 text-charcoal-900"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
                 >
                   {loading ? (
                     <>
@@ -626,4 +626,3 @@ export function CreateProjectWizard({ open, onOpenChange, onSuccess }: CreatePro
     </Dialog>
   )
 }
-

@@ -30,13 +30,13 @@ interface ConfirmationModalProps {
 const typeConfig: Record<ConfirmationType, { icon: React.ReactNode; iconBg: string; buttonColor: string }> = {
   delete: {
     icon: <Trash2 className="w-5 h-5" />,
-    iconBg: 'bg-crimson-500/20 border-crimson-500/30 text-crimson-500',
-    buttonColor: 'bg-crimson-500 hover:bg-crimson-600 text-white',
+    iconBg: 'bg-destructive/10 border-destructive/20 text-destructive',
+    buttonColor: 'bg-destructive hover:bg-destructive/90 text-destructive-foreground',
   },
   logout: {
     icon: <LogOut className="w-5 h-5" />,
-    iconBg: 'bg-gold-500/20 border-gold-500/30 text-gold-500',
-    buttonColor: 'bg-gold-500 hover:bg-gold-600 text-charcoal-900',
+    iconBg: 'bg-primary/10 border-primary/20 text-primary',
+    buttonColor: 'bg-primary hover:bg-primary/90 text-primary-foreground',
   },
   warning: {
     icon: <AlertTriangle className="w-5 h-5" />,
@@ -106,4 +106,3 @@ export function ConfirmationModal({
     </AlertDialog>
   )
 }
-

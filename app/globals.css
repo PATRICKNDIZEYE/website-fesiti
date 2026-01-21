@@ -4,64 +4,50 @@
 
 @layer base {
   :root {
-    /* Light Mode - Clean white backgrounds with dark text */
-    --background: 0 0% 100%;
-    --foreground: 0 0% 11%;
-    --card: 0 0% 98%;
-    --card-foreground: 0 0% 11%;
+    /* Enterprise Light */
+    --background: 210 33% 98%;
+    --foreground: 220 23% 17%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 23% 17%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 11%;
-    
-    /* Gold/Amber (#D4A017) - Primary buttons, positive KPIs, highlights */
-    --primary: 43 80% 46%;
-    --primary-foreground: 0 0% 11%;
-    
-    /* Slate Gray - Lighter for light mode */
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 11%;
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
-    --accent: 0 0% 96%;
-    --accent-foreground: 0 0% 11%;
-    
-    /* Crimson Red (#C41E3A) - Alerts, destructive actions */
-    --destructive: 348 74% 44%;
+    --popover-foreground: 220 23% 17%;
+    --primary: 212 50% 29%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 20% 96%;
+    --secondary-foreground: 220 23% 17%;
+    --muted: 210 16% 94%;
+    --muted-foreground: 215 16% 45%;
+    --accent: 186 44% 45%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 350 70% 42%;
     --destructive-foreground: 0 0% 100%;
-    
-    --border: 0 0% 90%;
-    --input: 0 0% 96%;
-    --ring: 43 80% 46%;
-    --radius: 0.5rem;
+    --border: 214 20% 90%;
+    --input: 210 16% 94%;
+    --ring: 212 50% 29%;
+    --radius: 0.6rem;
   }
 
   .dark {
-    /* Dark Mode - Charcoal Black backgrounds with light text */
-    --background: 0 0% 11%;
+    /* Enterprise Dark */
+    --background: 220 18% 12%;
     --foreground: 0 0% 98%;
-    --card: 0 0% 32%;
+    --card: 220 18% 16%;
     --card-foreground: 0 0% 98%;
-    --popover: 0 0% 11%;
+    --popover: 220 18% 14%;
     --popover-foreground: 0 0% 98%;
-    
-    /* Gold/Amber - Same in both modes */
-    --primary: 43 80% 46%;
-    --primary-foreground: 0 0% 11%;
-    
-    /* Slate Gray - Darker for dark mode */
-    --secondary: 0 0% 32%;
+    --primary: 212 60% 48%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 16% 20%;
     --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 32%;
-    --muted-foreground: 0 0% 70%;
-    --accent: 0 0% 32%;
-    --accent-foreground: 0 0% 98%;
-    
-    /* Crimson Red - Same in both modes */
-    --destructive: 348 74% 44%;
-    --destructive-foreground: 0 0% 98%;
-    
-    --border: 0 0% 32%;
-    --input: 0 0% 32%;
-    --ring: 43 80% 46%;
+    --muted: 220 16% 22%;
+    --muted-foreground: 217 12% 68%;
+    --accent: 186 44% 45%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 350 70% 42%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 16% 24%;
+    --input: 220 16% 22%;
+    --ring: 212 60% 48%;
   }
 }
 
@@ -71,7 +57,11 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-poppins), 'Poppins', system-ui, -apple-system, sans-serif;
+    font-family: var(--font-ibm-plex), 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+    background-image:
+      radial-gradient(1200px 600px at 90% -10%, hsla(212, 60%, 88%, 0.35), transparent 60%),
+      radial-gradient(900px 520px at -10% 20%, hsla(186, 45%, 82%, 0.35), transparent 55%);
+    background-attachment: fixed;
   }
   
   /* Better font rendering */
@@ -80,4 +70,3 @@
     -moz-osx-font-smoothing: grayscale;
   }
 }
-

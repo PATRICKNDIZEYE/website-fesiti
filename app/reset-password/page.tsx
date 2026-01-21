@@ -99,14 +99,14 @@ export default function ResetPasswordPage() {
             <CardContent className="pt-6">
               <div className="text-center space-y-4">
                 <div className="flex justify-center">
-                  <div className="w-16 h-16 bg-gold-500/20 rounded-full flex items-center justify-center border border-gold-500/30">
-                    <CheckCircle2 className="w-8 h-8 text-gold-500" />
+                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center border border-primary/20">
+                    <CheckCircle2 className="w-8 h-8 text-primary" />
                   </div>
                 </div>
                 <h2 className="text-2xl font-bold text-foreground">Password Reset Successful</h2>
                 <p className="text-muted-foreground">Your password has been reset. Redirecting to login...</p>
                 <Link href="/login">
-                  <Button className="bg-gold-500 hover:bg-gold-600 text-charcoal-900">
+                  <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
                     Go to Login
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
@@ -140,8 +140,8 @@ export default function ResetPasswordPage() {
 
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gold-500 rounded-2xl mb-4 shadow-lg">
-            <span className="text-charcoal-900 dark:text-charcoal-900 font-bold text-2xl">T</span>
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl mb-4 shadow-lg">
+            <span className="text-primary-foreground font-bold text-2xl">T</span>
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-2">Reset Password</h1>
           <p className="text-muted-foreground">Enter your new password</p>
@@ -199,7 +199,7 @@ export default function ResetPasswordPage() {
 
               <Button 
                 type="submit" 
-                className="w-full bg-gold-500 hover:bg-gold-600 text-charcoal-900" 
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" 
                 size="lg" 
                 disabled={loading || !token}
               >
@@ -210,7 +210,7 @@ export default function ResetPasswordPage() {
           <CardFooter className="flex flex-col space-y-4">
             <div className="text-sm text-center text-muted-foreground">
               Remember your password?{' '}
-              <Link href="/login" className="text-gold-500 hover:text-gold-600 font-medium">
+              <Link href="/login" className="text-primary hover:text-primary/80 font-medium">
                 Sign in
               </Link>
             </div>
@@ -220,4 +220,3 @@ export default function ResetPasswordPage() {
     </div>
   )
 }
-

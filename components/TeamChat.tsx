@@ -1,4 +1,5 @@
 'use client'
+/* eslint-disable react-hooks/exhaustive-deps */
 
 import { useState, useEffect } from 'react'
 import { Search, Phone, Smile, Mic, Send, Maximize2, X, ChevronRight, MessageSquare, Loader2 } from 'lucide-react'
@@ -156,14 +157,14 @@ export function TeamChat({ orgId }: TeamChatProps = {}) {
       <div className="p-4 border-b border-border flex items-center justify-between bg-card">
         <div className="flex items-center space-x-3">
           <Avatar className="border-2 border-border">
-            <AvatarFallback className="bg-gold-500/20 text-gold-500 font-semibold border border-gold-500/30">
+            <AvatarFallback className="bg-primary/10 text-primary font-semibold border border-primary/20">
               TC
             </AvatarFallback>
           </Avatar>
           {!expanded && (
             <div>
               <h3 className="font-semibold text-foreground">Team Chat</h3>
-              <p className="text-xs text-gold-500">Recent Messages</p>
+              <p className="text-xs text-primary">Recent Messages</p>
             </div>
           )}
         </div>
@@ -248,7 +249,7 @@ export function TeamChat({ orgId }: TeamChatProps = {}) {
                     {!isOwn && (
                       <div className="flex items-center space-x-2 mb-1 px-1">
                         <Avatar className="w-6 h-6 border border-border">
-                          <AvatarFallback className="bg-gold-500/20 text-gold-500 text-xs border border-gold-500/30">
+                          <AvatarFallback className="bg-primary/10 text-primary text-xs border border-primary/20">
                             {getParticipantInitials(msg.sender)}
                           </AvatarFallback>
                         </Avatar>
@@ -261,7 +262,7 @@ export function TeamChat({ orgId }: TeamChatProps = {}) {
                       className={cn(
                         "rounded-2xl px-4 py-2.5",
                         isOwn
-                          ? "bg-gold-500 text-charcoal-900 dark:text-charcoal-900 rounded-br-sm"
+                          ? "bg-primary text-primary-foreground rounded-br-sm"
                           : "bg-secondary text-foreground rounded-bl-sm shadow-sm border border-border"
                       )}
                     >
@@ -336,7 +337,7 @@ export function TeamChat({ orgId }: TeamChatProps = {}) {
           )}
           <Button 
             size="icon" 
-            className="h-10 w-10 bg-gold-500 hover:bg-gold-600 text-charcoal-900"
+            className="h-10 w-10 bg-primary hover:bg-primary/90 text-primary-foreground"
             onClick={handleSendMessage}
             disabled={loading}
           >

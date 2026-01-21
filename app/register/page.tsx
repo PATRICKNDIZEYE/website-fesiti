@@ -82,8 +82,8 @@ export default function RegisterPage() {
 
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gold-500 rounded-2xl mb-4 shadow-lg">
-            <span className="text-charcoal-900 dark:text-charcoal-900 font-bold text-2xl">T</span>
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl mb-4 shadow-lg">
+            <span className="text-primary-foreground font-bold text-2xl">T</span>
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-2">Create Account</h1>
           <p className="text-muted-foreground">Get started with PM Tool today</p>
@@ -104,7 +104,7 @@ export default function RegisterPage() {
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="firstName" className="text-foreground">First Name</Label>
@@ -173,7 +173,7 @@ export default function RegisterPage() {
                 <input
                   id="terms"
                   type="checkbox"
-                  className="h-4 w-4 rounded border-border bg-background text-gold-500 focus:ring-gold-500"
+                  className="h-4 w-4 rounded border-border bg-background text-primary focus:ring-primary/30"
                   required
                 />
                 <Label htmlFor="terms" className="text-sm text-muted-foreground cursor-pointer">
@@ -181,7 +181,7 @@ export default function RegisterPage() {
                   <button
                     type="button"
                     onClick={() => setTermsOpen(true)}
-                    className="text-gold-500 hover:text-gold-600 underline"
+                    className="text-primary hover:text-primary/80 underline"
                   >
                     Terms of Service
                   </button>{' '}
@@ -189,14 +189,14 @@ export default function RegisterPage() {
                   <button
                     type="button"
                     onClick={() => setPrivacyOpen(true)}
-                    className="text-gold-500 hover:text-gold-600 underline"
+                    className="text-primary hover:text-primary/80 underline"
                   >
                     Privacy Policy
                   </button>
                 </Label>
               </div>
 
-              <Button type="submit" className="w-full bg-gold-500 hover:bg-gold-600 text-charcoal-900" size="lg" disabled={loading}>
+              <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" size="lg" disabled={loading}>
                 {loading ? (
                   'Creating account...'
                 ) : (
@@ -211,7 +211,7 @@ export default function RegisterPage() {
           <CardFooter className="flex flex-col space-y-4">
             <div className="text-sm text-center text-muted-foreground">
               Already have an account?{' '}
-              <Link href="/login" className="text-gold-500 hover:text-gold-600 font-medium">
+              <Link href="/login" className="text-primary hover:text-primary/80 font-medium">
                 Sign in
               </Link>
             </div>
@@ -233,7 +233,7 @@ export default function RegisterPage() {
             variant="outline"
             className="w-full mt-4 border-border text-foreground hover:bg-accent"
             onClick={() => {
-              window.location.href = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/auth/google`
+              window.location.href = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:57959'}/auth/google`
             }}
           >
             <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">

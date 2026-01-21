@@ -30,7 +30,7 @@ export default function SettingsRedirectPage() {
   return (
     <div className="flex items-center justify-center h-screen bg-background">
       <div className="flex flex-col items-center space-y-4">
-        <Loader2 className="w-8 h-8 animate-spin text-gold-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
         <p className="text-muted-foreground">Redirecting...</p>
       </div>
     </div>

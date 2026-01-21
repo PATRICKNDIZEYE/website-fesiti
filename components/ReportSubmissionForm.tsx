@@ -1,4 +1,5 @@
 'use client'
+/* eslint-disable react-hooks/exhaustive-deps */
 
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
@@ -128,7 +129,7 @@ export function ReportSubmissionForm({ projectId, indicatorId, onSuccess, orgId 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <Loader2 className="w-6 h-6 animate-spin text-gold-500" />
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
       </div>
     )
   }
@@ -154,8 +155,8 @@ export function ReportSubmissionForm({ projectId, indicatorId, onSuccess, orgId 
       )}
 
       {success && (
-        <Alert className="mb-4 bg-gold-500/20 border-gold-500/30">
-          <AlertCircle className="h-4 w-4 text-gold-500" />
+        <Alert className="mb-4 bg-primary/10 border-primary/20">
+          <AlertCircle className="h-4 w-4 text-primary" />
           <AlertDescription className="text-foreground">Report submitted successfully!</AlertDescription>
         </Alert>
       )}
@@ -169,7 +170,7 @@ export function ReportSubmissionForm({ projectId, indicatorId, onSuccess, orgId 
             onChange={(e) => setFormData({ ...formData, indicatorId: e.target.value })}
             required
             disabled={!!indicatorId}
-            className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-gold-500 disabled:opacity-50"
+            className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50"
           >
             <option value="">Select an indicator</option>
             {indicators.map((indicator) => (
@@ -196,7 +197,7 @@ export function ReportSubmissionForm({ projectId, indicatorId, onSuccess, orgId 
                 placeholder="Enter qualitative description or text value..."
                 rows={3}
                 required
-                className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold-500"
+                className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
             ) : (
               <Input
@@ -233,14 +234,14 @@ export function ReportSubmissionForm({ projectId, indicatorId, onSuccess, orgId 
             onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
             placeholder="Add any additional notes or context..."
             rows={3}
-            className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold-500"
+            className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
         </div>
 
         <Button
           type="submit"
           disabled={submitting || success}
-          className="w-full bg-gold-500 hover:bg-gold-600 text-charcoal-900"
+          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
         >
           {submitting ? (
             <>
@@ -260,4 +261,3 @@ export function ReportSubmissionForm({ projectId, indicatorId, onSuccess, orgId 
     </div>
   )
 }
-

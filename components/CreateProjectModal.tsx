@@ -208,7 +208,7 @@ export function CreateProjectModal({ open, onOpenChange, onSuccess }: CreateProj
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Describe your project..."
                 rows={3}
-                className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold-500"
+                className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
             </div>
 
@@ -244,7 +244,7 @@ export function CreateProjectModal({ open, onOpenChange, onSuccess }: CreateProj
                   value={formData.managerId}
                   onChange={(e) => setFormData({ ...formData, managerId: e.target.value })}
                   required
-                  className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-gold-500"
+                  className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                 >
                   <option value="">Select a manager</option>
                   {users.map((user) => (
@@ -331,7 +331,7 @@ export function CreateProjectModal({ open, onOpenChange, onSuccess }: CreateProj
                     onChange={(e) => updateIndicator(index, 'description', e.target.value)}
                     placeholder="Describe what this indicator measures..."
                     rows={2}
-                    className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold-500"
+                    className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                   />
                 </div>
 
@@ -341,7 +341,7 @@ export function CreateProjectModal({ open, onOpenChange, onSuccess }: CreateProj
                     <select
                       value={indicator.type}
                       onChange={(e) => updateIndicator(index, 'type', e.target.value as any)}
-                      className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-gold-500"
+                      className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                     >
                       <option value="quantitative">Quantitative</option>
                       <option value="qualitative">Qualitative</option>
@@ -353,7 +353,7 @@ export function CreateProjectModal({ open, onOpenChange, onSuccess }: CreateProj
                     <select
                       value={indicator.unit}
                       onChange={(e) => updateIndicator(index, 'unit', e.target.value as any)}
-                      className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-gold-500"
+                      className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                     >
                       <option value="number">Number</option>
                       <option value="percentage">Percentage</option>
@@ -378,7 +378,7 @@ export function CreateProjectModal({ open, onOpenChange, onSuccess }: CreateProj
             <Button
               type="submit"
               disabled={loading}
-              className="bg-gold-500 hover:bg-gold-600 text-charcoal-900"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               {loading ? (
                 <>
@@ -395,4 +395,3 @@ export function CreateProjectModal({ open, onOpenChange, onSuccess }: CreateProj
     </Dialog>
   )
 }
-

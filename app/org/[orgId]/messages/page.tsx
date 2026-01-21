@@ -1,11 +1,11 @@
 'use client'
+/* eslint-disable react-hooks/exhaustive-deps */
 
 import { useEffect, useState, useRef } from 'react'
+import Image from 'next/image'
 import { useRouter, useParams } from 'next/navigation'
-import { Sidebar } from '@/components/Sidebar'
 import { Header } from '@/components/Header'
 import { TeamChat } from '@/components/TeamChat'
-import { useLayout } from '@/contexts/LayoutContext'
 import { cn } from '@/lib/utils'
 import { Search, Send, Paperclip, Image as ImageIcon, X, Play, Pause, Loader2, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -62,7 +62,6 @@ export default function MessagesPage() {
   const router = useRouter()
   const params = useParams()
   const orgId = params.orgId as string
-  const { sidebarCollapsed, chatCollapsed } = useLayout()
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
@@ -283,17 +282,10 @@ export default function MessagesPage() {
   }
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
-      <Sidebar orgId={orgId} />
-      
-      <div className={cn(
-        "flex-1 flex flex-col overflow-hidden transition-all duration-300",
-        sidebarCollapsed ? "ml-20" : "ml-64",
-        chatCollapsed ? "mr-12" : "mr-80"
-      )}>
-        <Header title="Messages" />
-        
-        <div className="flex-1 flex overflow-hidden">
+    <div className="space-y-6">
+      <Header title="Messages" subtitle="Coordinate field updates and stakeholder discussions." />
+
+      <div className="flex min-h-[70vh] overflow-hidden rounded-2xl border border-border/70 bg-card">
           {/* Conversations List */}
           <div className="w-80 border-r border-border bg-card flex flex-col">
             <div className="p-4 border-b border-border space-y-2">
@@ -314,7 +306,7 @@ export default function MessagesPage() {
                   placeholder="Search conversations..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 rounded-full border-border/70 bg-card"
                 />
               </div>
             </div>
@@ -340,7 +332,7 @@ export default function MessagesPage() {
                     >
                       <div className="flex items-center space-x-3">
                         <Avatar>
-                          <AvatarFallback className="bg-gold-500/20 text-gold-500 border border-gold-500/30">
+                          <AvatarFallback className="bg-primary/10 text-primary border border-primary/20">
                             {getParticipantInitials(other)}
                           </AvatarFallback>
                         </Avatar>
@@ -375,10 +367,10 @@ export default function MessagesPage() {
             {selectedConversation ? (
               <>
                 {/* Chat Header */}
-                <div className="p-4 border-b border-border bg-card">
+                  <div className="p-4 border-b border-border/70 bg-card">
                   <div className="flex items-center space-x-3">
                     <Avatar>
-                      <AvatarFallback className="bg-gold-500/20 text-gold-500 border border-gold-500/30">
+                      <AvatarFallback className="bg-primary/10 text-primary border border-primary/20">
                         {getParticipantInitials(getOtherParticipant(selectedConversation))}
                       </AvatarFallback>
                     </Avatar>
@@ -392,7 +384,7 @@ export default function MessagesPage() {
                 </div>
 
                 {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/30">
+                <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/20">
                   {messages.map((msg) => {
                     const isOwn = msg.senderId === currentUser?.id
                     return (
@@ -404,7 +396,7 @@ export default function MessagesPage() {
                           {!isOwn && (
                             <div className="flex items-center space-x-2 mb-1 px-1">
                               <Avatar className="w-6 h-6">
-                                <AvatarFallback className="bg-gold-500/20 text-gold-500 text-xs">
+                                <AvatarFallback className="bg-primary/10 text-primary text-xs">
                                   {getParticipantInitials(msg.sender)}
                                 </AvatarFallback>
                               </Avatar>
@@ -417,7 +409,7 @@ export default function MessagesPage() {
                             className={cn(
                               "rounded-2xl px-4 py-2.5",
                               isOwn
-                                ? "bg-gold-500 text-charcoal-900 dark:text-charcoal-900 rounded-br-sm"
+                                ? "bg-primary text-primary-foreground rounded-br-sm"
                                 : "bg-card text-foreground rounded-bl-sm shadow-sm border border-border"
                             )}
                           >
@@ -452,10 +444,13 @@ export default function MessagesPage() {
                               </div>
                             ) : msg.type === 'image' && msg.attachments && msg.attachments[0] ? (
                               <div className="space-y-2">
-                                <img
+                                <Image
                                   src={getFileUrl(msg.attachments[0].filePath)}
                                   alt={msg.attachments[0].fileName}
-                                  className="max-w-full rounded-lg"
+                                  width={600}
+                                  height={400}
+                                  unoptimized
+                                  className="max-w-full rounded-lg h-auto w-full"
                                 />
                                 {msg.content && <p className="text-sm">{msg.content}</p>}
                               </div>
@@ -498,9 +493,12 @@ export default function MessagesPage() {
                         <div key={index} className="relative">
                           {file.type.startsWith('image/') ? (
                             <div className="relative w-20 h-20 rounded-lg overflow-hidden border border-border">
-                              <img
+                              <Image
                                 src={URL.createObjectURL(file)}
                                 alt={file.name}
+                                width={80}
+                                height={80}
+                                unoptimized
                                 className="w-full h-full object-cover"
                               />
                               <Button
@@ -590,7 +588,7 @@ export default function MessagesPage() {
                     <Button
                       onClick={handleSendMessage}
                       disabled={sending || (!message.trim() && selectedFiles.length === 0 && !voiceBlob)}
-                      className="h-10 w-10 bg-gold-500 hover:bg-gold-600 text-charcoal-900"
+                      className="h-10 w-10 bg-primary hover:bg-primary/90 text-primary-foreground"
                     >
                       {sending ? (
                         <Loader2 className="w-5 h-5 animate-spin" />
@@ -608,7 +606,6 @@ export default function MessagesPage() {
             )}
           </div>
         </div>
-      </div>
 
       <TeamChat orgId={orgId} />
 
@@ -629,7 +626,7 @@ export default function MessagesPage() {
                   className="flex items-center space-x-3 p-3 rounded-lg hover:bg-muted cursor-pointer transition-colors"
                 >
                   <Avatar>
-                    <AvatarFallback className="bg-gold-500/20 text-gold-500 border border-gold-500/30">
+                    <AvatarFallback className="bg-primary/10 text-primary border border-primary/20">
                       {getParticipantInitials(user)}
                     </AvatarFallback>
                   </Avatar>
@@ -648,4 +645,3 @@ export default function MessagesPage() {
     </div>
   )
 }
-

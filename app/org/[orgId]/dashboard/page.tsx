@@ -1,8 +1,8 @@
 'use client'
+/* eslint-disable react-hooks/exhaustive-deps */
 
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { Sidebar } from '@/components/Sidebar'
 import { Header } from '@/components/Header'
 import { TeamCard } from '@/components/TeamCard'
 import { TeamChat } from '@/components/TeamChat'
@@ -10,11 +10,9 @@ import { WelcomeModal } from '@/components/WelcomeModal'
 import { OnboardingTour } from '@/components/OnboardingTour'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { useLayout } from '@/contexts/LayoutContext'
 import { orgApi } from '@/lib/api-helpers'
-import { DashboardStats, Project } from '@/lib/types'
+import { DashboardStats } from '@/lib/types'
 import { Users, FolderKanban, Target, TrendingUp, Loader2 } from 'lucide-react'
-import { cn } from '@/lib/utils'
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -25,7 +23,6 @@ export default function DashboardPage() {
   const [showWelcomeModal, setShowWelcomeModal] = useState(false)
   const [showTour, setShowTour] = useState(false)
   const [userName, setUserName] = useState<string>('')
-  const { sidebarCollapsed, chatCollapsed } = useLayout()
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -105,7 +102,7 @@ export default function DashboardPage() {
     return (
       <div className="flex items-center justify-center h-screen bg-background">
         <div className="flex flex-col items-center space-y-4">
-          <Loader2 className="w-8 h-8 animate-spin text-gold-500" />
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
           <p className="text-muted-foreground">Loading dashboard...</p>
         </div>
       </div>
@@ -113,7 +110,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
+    <div className="space-y-6">
       <WelcomeModal
         open={showWelcomeModal}
         onStartTour={handleStartTour}
@@ -125,78 +122,73 @@ export default function DashboardPage() {
         <OnboardingTour orgId={orgId} onComplete={handleTourComplete} />
       )}
 
-      <Sidebar orgId={orgId} />
-      
-      <div className={cn(
-        "flex-1 flex flex-col overflow-hidden transition-all duration-300",
-        sidebarCollapsed ? "ml-20" : "ml-64",
-        chatCollapsed ? "mr-12" : "mr-80"
-      )}>
-        <Header title="Dashboard" orgId={orgId} />
-        
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-6">
+      <Header
+        title="Dashboard"
+        subtitle="High-level performance signals across programs and teams."
+      />
+
+      <div className="space-y-8">
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6" data-tour="stats">
-              <Card className="bg-card border-border shadow-sm hover:shadow-md transition-shadow">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4" data-tour="stats">
+              <Card className="bg-card border-border/70 shadow-sm hover:shadow-md transition-shadow">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground mb-1">Active Users</p>
-                      <p className="text-3xl font-bold text-foreground">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Active Users</p>
+                      <p className="text-3xl font-semibold text-foreground mt-2">
                         {stats?.stats.totalUsers || 0}
                       </p>
                     </div>
-                    <div className="w-12 h-12 bg-gold-500/20 dark:bg-gold-500/20 rounded-xl flex items-center justify-center border border-gold-500/30">
-                      <Users className="w-6 h-6 text-gold-500" />
+                    <div className="w-12 h-12 rounded-2xl border border-primary/20 bg-primary/10 flex items-center justify-center">
+                      <Users className="w-6 h-6 text-primary" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="bg-card border-border shadow-sm hover:shadow-md transition-shadow">
+              <Card className="bg-card border-border/70 shadow-sm hover:shadow-md transition-shadow">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground mb-1">Number of Projects</p>
-                      <p className="text-3xl font-bold text-foreground">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Active Programs</p>
+                      <p className="text-3xl font-semibold text-foreground mt-2">
                         {stats?.stats.totalProjects || 0}
                       </p>
                     </div>
-                    <div className="w-12 h-12 bg-gold-500/20 dark:bg-gold-500/20 rounded-xl flex items-center justify-center border border-gold-500/30">
-                      <FolderKanban className="w-6 h-6 text-gold-500" />
+                    <div className="w-12 h-12 rounded-2xl border border-primary/20 bg-primary/10 flex items-center justify-center">
+                      <FolderKanban className="w-6 h-6 text-primary" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="bg-card border-border shadow-sm hover:shadow-md transition-shadow">
+              <Card className="bg-card border-border/70 shadow-sm hover:shadow-md transition-shadow">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground mb-1">Number of Tasks</p>
-                      <p className="text-3xl font-bold text-foreground">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Indicators</p>
+                      <p className="text-3xl font-semibold text-foreground mt-2">
                         {stats?.stats.totalIndicators || 0}
                       </p>
                     </div>
-                    <div className="w-12 h-12 bg-gold-500/20 dark:bg-gold-500/20 rounded-xl flex items-center justify-center border border-gold-500/30">
-                      <Target className="w-6 h-6 text-gold-500" />
+                    <div className="w-12 h-12 rounded-2xl border border-primary/20 bg-primary/10 flex items-center justify-center">
+                      <Target className="w-6 h-6 text-primary" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="bg-card border-border shadow-sm hover:shadow-md transition-shadow">
+              <Card className="bg-card border-border/70 shadow-sm hover:shadow-md transition-shadow">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground mb-1">Target Completed</p>
-                      <p className="text-3xl font-bold text-foreground">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Target Completion</p>
+                      <p className="text-3xl font-semibold text-foreground mt-2">
                         {stats?.stats.averageProgress.toFixed(1) || 0}%
                       </p>
                     </div>
-                    <div className="w-12 h-12 bg-gold-500/20 dark:bg-gold-500/20 rounded-xl flex items-center justify-center border border-gold-500/30">
-                      <TrendingUp className="w-6 h-6 text-gold-500" />
+                    <div className="w-12 h-12 rounded-2xl border border-primary/20 bg-primary/10 flex items-center justify-center">
+                      <TrendingUp className="w-6 h-6 text-primary" />
                     </div>
                   </div>
                 </CardContent>
@@ -204,8 +196,13 @@ export default function DashboardPage() {
             </div>
 
             {/* Team Progress Cards */}
-            <div className="mb-6" data-tour="projects">
-              <h2 className="text-xl font-semibold text-foreground mb-4">Team Progress</h2>
+            <div data-tour="projects" className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-semibold text-foreground">Team Progress</h2>
+                  <p className="text-sm text-muted-foreground">Latest program activity across teams.</p>
+                </div>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {stats?.recentProjects && stats.recentProjects.length > 0 ? (
                   stats.recentProjects.map((project, index) => (
@@ -217,21 +214,21 @@ export default function DashboardPage() {
                     />
                   ))
                 ) : (
-                  <div className="col-span-4 text-center py-12 bg-card rounded-xl border border-border">
-                    <p className="text-muted-foreground">No projects yet. Create your first project to get started.</p>
+                  <div className="col-span-4 text-center py-12 bg-card rounded-2xl border border-border/70">
+                    <p className="text-muted-foreground">No programs yet. Create your first program to get started.</p>
                   </div>
                 )}
               </div>
             </div>
 
             {/* Timeline Section */}
-            <Card className="bg-card border-border shadow-sm">
+            <Card className="bg-card border-border/70 shadow-sm">
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle className="text-xl text-foreground">Timeline</CardTitle>
                     <p className="text-sm text-muted-foreground mt-1 flex items-center">
-                      <span className="mr-2">📅</span>
+                      <span className="mr-2">Date</span>
                       {new Date().toLocaleDateString('en-US', { 
                         year: 'numeric', 
                         month: 'long', 
@@ -243,14 +240,14 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <Tabs defaultValue="daily" className="w-full">
-                  <TabsList className="grid w-full grid-cols-4 mb-6">
-                    <TabsTrigger value="daily">Daily</TabsTrigger>
-                    <TabsTrigger value="weekly">Weekly</TabsTrigger>
-                    <TabsTrigger value="monthly">Monthly</TabsTrigger>
-                    <TabsTrigger value="yearly">Yearly</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="daily" className="mt-0">
-                    <div className="bg-muted/50 rounded-lg p-8 border border-border">
+                <TabsList className="grid w-full grid-cols-4 mb-6">
+                  <TabsTrigger value="daily">Daily</TabsTrigger>
+                  <TabsTrigger value="weekly">Weekly</TabsTrigger>
+                  <TabsTrigger value="monthly">Monthly</TabsTrigger>
+                  <TabsTrigger value="yearly">Yearly</TabsTrigger>
+                </TabsList>
+                <TabsContent value="daily" className="mt-0">
+                    <div className="bg-muted/40 rounded-2xl p-8 border border-border/70">
                       <div className="text-center text-muted-foreground">
                         <p className="mb-2">Timeline visualization will be displayed here</p>
                         <p className="text-sm">Gantt chart and task timeline coming soon</p>
@@ -258,29 +255,26 @@ export default function DashboardPage() {
                     </div>
                   </TabsContent>
                   <TabsContent value="weekly" className="mt-0">
-                    <div className="bg-muted/50 rounded-lg p-8 border border-border text-center text-muted-foreground">
+                    <div className="bg-muted/40 rounded-2xl p-8 border border-border/70 text-center text-muted-foreground">
                       Weekly view coming soon
                     </div>
                   </TabsContent>
                   <TabsContent value="monthly" className="mt-0">
-                    <div className="bg-muted/50 rounded-lg p-8 border border-border text-center text-muted-foreground">
+                    <div className="bg-muted/40 rounded-2xl p-8 border border-border/70 text-center text-muted-foreground">
                       Monthly view coming soon
                     </div>
                   </TabsContent>
                   <TabsContent value="yearly" className="mt-0">
-                    <div className="bg-muted/50 rounded-lg p-8 border border-border text-center text-muted-foreground">
+                    <div className="bg-muted/40 rounded-2xl p-8 border border-border/70 text-center text-muted-foreground">
                       Yearly view coming soon
                     </div>
                   </TabsContent>
                 </Tabs>
               </CardContent>
             </Card>
-          </div>
-        </div>
       </div>
 
       <TeamChat orgId={orgId} />
     </div>
   )
 }
-

@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
@@ -170,10 +171,10 @@ export function Sidebar({ orgId }: SidebarProps = {}) {
       <div className="p-6 border-b border-border relative">
         <div className="flex items-center space-x-2">
           <div className="w-10 h-10  rounded-lg flex items-center justify-center shadow-sm">
-          <img src="/images/logo-s.png" width={100} height={100} alt='logo' />
+          <Image src="/images/logo-s.png" width={40} height={40} alt="logo" />
           </div>
           {!sidebarCollapsed && (
-            <img src="/images/logo-t.png" width={100} height={100} alt='logo' />
+            <Image src="/images/logo-t.png" width={100} height={24} alt="logo" />
           )}
         </div>
         <Button
@@ -205,7 +206,7 @@ export function Sidebar({ orgId }: SidebarProps = {}) {
               className={cn(
                 'flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 group relative',
                 isActive
-                  ? 'bg-gold-500/20 dark:bg-gold-500/20 text-gold-600 dark:text-gold-500 border border-gold-500/30 shadow-sm'
+                  ? 'bg-primary/10 text-primary border border-primary/20 shadow-sm'
                   : 'text-muted-foreground hover:bg-accent hover:text-foreground'
               )}
               title={sidebarCollapsed ? item.label : undefined}
@@ -213,13 +214,16 @@ export function Sidebar({ orgId }: SidebarProps = {}) {
               <div className="flex items-center space-x-3">
                 {item.isProfile ? (
                   // Profile with user avatar
-                  <div className="w-5 h-5 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center bg-gold-500/20 border border-gold-500/30">
+                  <div className="w-5 h-5 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center bg-primary/10 border border-primary/20">
                     {userAvatar && !imageError ? (
-                      <img
+                      <Image
                         src={userAvatar}
                         alt="Profile"
+                        width={20}
+                        height={20}
+                        unoptimized
                         className="w-full h-full object-cover"
-                        onError={(e) => {
+                        onError={() => {
                           // Mark error but don't clear avatar (might be temporary)
                           console.error('Failed to load avatar image:', userAvatar)
                           setImageError(true)
@@ -230,7 +234,7 @@ export function Sidebar({ orgId }: SidebarProps = {}) {
                         }}
                       />
                     ) : (
-                      <span className="text-xs font-medium text-gold-600 dark:text-gold-500">
+                      <span className="text-xs font-medium text-primary">
                         {userInitials || <User className="w-3 h-3" />}
                       </span>
                     )}
@@ -246,12 +250,12 @@ export function Sidebar({ orgId }: SidebarProps = {}) {
                 )}
               </div>
               {!sidebarCollapsed && item.hasBadge && unreadCount > 0 && (
-                <Badge variant="destructive" className="h-5 min-w-5 px-1.5 text-xs bg-crimson-500">
+                <Badge variant="destructive" className="h-5 min-w-5 px-1.5 text-xs">
                   {unreadCount > 99 ? '99+' : unreadCount}
                 </Badge>
               )}
               {sidebarCollapsed && item.hasBadge && unreadCount > 0 && (
-                <Badge variant="destructive" className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px] bg-crimson-500">
+                <Badge variant="destructive" className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]">
                   {unreadCount > 99 ? '99+' : unreadCount}
                 </Badge>
               )}

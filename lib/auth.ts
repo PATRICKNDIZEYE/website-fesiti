@@ -38,7 +38,7 @@ export const authService = {
   },
 
   getProfile: async (): Promise<User> => {
-    const response = await api.post('/auth/profile')
+    const response = await api.get('/auth/profile')
     return response.data
   },
 

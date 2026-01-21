@@ -10,7 +10,7 @@ export default function NotFound() {
   const router = useRouter()
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-charcoal-900 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-navy-900 p-4">
       <div className="w-full max-w-2xl">
         <Card className="bg-slate-500 border-slate-400 shadow-xl">
           <CardHeader className="text-center pb-4">
@@ -78,4 +78,3 @@ export default function NotFound() {
     </div>
   )
 }
-

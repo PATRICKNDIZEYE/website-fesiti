@@ -1,11 +1,10 @@
 'use client'
+/* eslint-disable react-hooks/exhaustive-deps */
 
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { Sidebar } from '@/components/Sidebar'
 import { Header } from '@/components/Header'
 import { TeamChat } from '@/components/TeamChat'
-import { useLayout } from '@/contexts/LayoutContext'
 import { Plus, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Link as LinkIcon, Unlink, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
@@ -40,7 +39,6 @@ export default function CalendarPage() {
   const router = useRouter()
   const params = useParams()
   const orgId = params.orgId as string
-  const { sidebarCollapsed, chatCollapsed } = useLayout()
   const [currentDate, setCurrentDate] = useState(new Date())
   const [events, setEvents] = useState<CalendarEvent[]>([])
   const [loading, setLoading] = useState(true)
@@ -253,19 +251,11 @@ export default function CalendarPage() {
   }
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
-      <Sidebar orgId={orgId} />
-      
-      <div className={cn(
-        "flex-1 flex flex-col overflow-hidden transition-all duration-300",
-        sidebarCollapsed ? "ml-20" : "ml-64",
-        chatCollapsed ? "mr-12" : "mr-80"
-      )}>
-        <Header title="Calendar" orgId={orgId} />
-        
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-6">
-            <div className="mb-6 flex items-center justify-between">
+    <div className="space-y-6">
+      <Header title="Calendar" subtitle="Milestones, field visits, and reporting deadlines." />
+
+      <div className="space-y-6">
+        <div className="mb-6 flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <Button
                   variant="outline"
@@ -312,7 +302,7 @@ export default function CalendarPage() {
                 )}
                 <Button
                   onClick={() => openCreateDialog(new Date())}
-                  className="bg-gold-500 hover:bg-gold-600 text-charcoal-900"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   New Event
@@ -338,12 +328,12 @@ export default function CalendarPage() {
                       className={cn(
                         "min-h-[100px] p-2 bg-card border-r border-b border-border",
                         !isCurrentMonth && "bg-muted/30",
-                        isToday && "bg-gold-500/10"
+                        isToday && "bg-primary/10"
                       )}
                     >
                       <div className={cn(
                         "text-sm font-medium mb-1",
-                        isToday && "text-gold-600 dark:text-gold-500",
+                        isToday && "text-primary",
                         !isCurrentMonth && "text-muted-foreground"
                       )}>
                         {format(day, 'd')}
@@ -353,7 +343,7 @@ export default function CalendarPage() {
                           <div
                             key={event.id}
                             onClick={() => openEditDialog(event)}
-                            className="text-xs p-1 rounded bg-gold-500/20 text-gold-600 dark:text-gold-500 cursor-pointer hover:bg-gold-500/30 truncate"
+                            className="text-xs p-1 rounded bg-primary/10 text-primary cursor-pointer hover:bg-primary/20 truncate"
                             title={event.title}
                           >
                             {event.title}
@@ -370,8 +360,6 @@ export default function CalendarPage() {
                 })}
               </div>
             </div>
-          </div>
-        </div>
       </div>
 
       <TeamChat orgId={orgId} />
@@ -450,7 +438,7 @@ export default function CalendarPage() {
             </Button>
             <Button
               onClick={selectedEvent ? handleUpdateEvent : handleCreateEvent}
-              className="bg-gold-500 hover:bg-gold-600 text-charcoal-900"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               {selectedEvent ? 'Update' : 'Create'}
             </Button>
@@ -460,4 +448,3 @@ export default function CalendarPage() {
     </div>
   )
 }
-

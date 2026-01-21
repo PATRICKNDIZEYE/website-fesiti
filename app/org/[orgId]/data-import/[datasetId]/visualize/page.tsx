@@ -1,11 +1,10 @@
 'use client'
+/* eslint-disable react-hooks/exhaustive-deps */
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { Sidebar } from '@/components/Sidebar'
 import { Header } from '@/components/Header'
 import { TeamChat } from '@/components/TeamChat'
-import { useLayout } from '@/contexts/LayoutContext'
 import { cn } from '@/lib/utils'
 import { ArrowLeft, Loader2, Save } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -24,7 +23,6 @@ export default function VisualizeDatasetPage() {
   const router = useRouter()
   const orgId = params.orgId as string
   const datasetId = params.datasetId as string
-  const { sidebarCollapsed, chatCollapsed } = useLayout()
 
   const [dataset, setDataset] = useState<any>(null)
   const [data, setData] = useState<any[]>([])
@@ -244,18 +242,10 @@ export default function VisualizeDatasetPage() {
   }
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
-      <Sidebar orgId={orgId} />
-      
-      <div className={cn(
-        "flex-1 flex flex-col overflow-hidden transition-all duration-300",
-        sidebarCollapsed ? "ml-20" : "ml-64",
-        chatCollapsed ? "mr-12" : "mr-80"
-      )}>
-        <Header title={dataset?.name || 'Visualize Dataset'} orgId={orgId} />
-        
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-6">
+    <div className="space-y-6">
+      <Header title={dataset?.name || 'Visualize Dataset'} subtitle="Build charts from your data tables." />
+
+      <div className="space-y-6">
             <Link
               href={`/org/${orgId}/data-import`}
               className="inline-flex items-center space-x-2 text-muted-foreground hover:text-foreground mb-6"
@@ -588,7 +578,7 @@ export default function VisualizeDatasetPage() {
                   <CardContent>
                     {loading ? (
                       <div className="flex items-center justify-center h-[600px]">
-                        <Loader2 className="w-8 h-8 animate-spin text-gold-500" />
+                        <Loader2 className="w-8 h-8 animate-spin text-primary" />
                       </div>
                     ) : data.length > 0 ? (
                       <>
@@ -614,12 +604,9 @@ export default function VisualizeDatasetPage() {
                 </Card>
               </div>
             </div>
-          </div>
-        </div>
       </div>
 
       <TeamChat orgId={orgId} />
     </div>
   )
 }
-

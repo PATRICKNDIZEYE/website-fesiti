@@ -1,11 +1,10 @@
 'use client'
+/* eslint-disable react-hooks/exhaustive-deps */
 
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { Sidebar } from '@/components/Sidebar'
 import { Header } from '@/components/Header'
 import { TeamChat } from '@/components/TeamChat'
-import { useLayout } from '@/contexts/LayoutContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -45,7 +44,6 @@ export default function NewProjectPage() {
   const router = useRouter()
   const params = useParams()
   const orgId = params.orgId as string
-  const { sidebarCollapsed, chatCollapsed } = useLayout()
   const [currentStep, setCurrentStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -320,18 +318,10 @@ export default function NewProjectPage() {
   const progress = (currentStep / STEPS.length) * 100
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
-      <Sidebar orgId={orgId} />
-      
-      <div className={cn(
-        "flex-1 flex flex-col overflow-hidden transition-all duration-300",
-        sidebarCollapsed ? "ml-20" : "ml-64",
-        chatCollapsed ? "mr-12" : "mr-80"
-      )}>
-        <Header title="Create New Project" />
-        
-        <div className="flex-1 overflow-y-auto">
-          <div className="max-w-4xl mx-auto p-6">
+    <div className="space-y-6">
+      <Header title="Create New Program" subtitle="Define scope, outcomes, and delivery cadence." />
+
+      <div className="max-w-4xl space-y-6">
             {/* Header with back button and save status */}
             <div className="flex items-center justify-between mb-6">
               <Link
@@ -339,11 +329,11 @@ export default function NewProjectPage() {
                 className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors"
               >
                 <ChevronLeft className="w-4 h-4" />
-                <span>Back to Projects</span>
+                <span>Back to Programs</span>
               </Link>
               <div className="flex items-center space-x-4">
                 {success && (
-                  <span className="text-sm text-gold-500 flex items-center space-x-1">
+                  <span className="text-sm text-primary flex items-center space-x-1">
                     <Check className="w-4 h-4" />
                     <span>{success}</span>
                   </span>
@@ -394,9 +384,9 @@ export default function NewProjectPage() {
                       className={cn(
                         "w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all",
                         currentStep > step.id
-                          ? 'bg-gold-500 border-gold-500 text-charcoal-900'
-                          : currentStep === step.id
-                          ? 'bg-gold-500/20 border-gold-500 text-gold-500'
+                          ? 'bg-primary border-primary text-primary-foreground'
+                        : currentStep === step.id
+                          ? 'bg-primary/10 border-primary text-primary'
                           : 'bg-muted border-border text-muted-foreground'
                       )}
                     >
@@ -419,7 +409,7 @@ export default function NewProjectPage() {
                     <div
                       className={cn(
                         "h-0.5 flex-1 mx-2",
-                        currentStep > step.id ? 'bg-gold-500' : 'bg-border'
+                        currentStep > step.id ? 'bg-primary' : 'bg-border'
                       )}
                     />
                   )}
@@ -461,7 +451,7 @@ export default function NewProjectPage() {
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                       placeholder="Describe your project..."
                       rows={4}
-                      className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold-500"
+                      className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                     />
                   </div>
 
@@ -504,7 +494,7 @@ export default function NewProjectPage() {
                         value={formData.managerId}
                         onChange={(e) => setFormData({ ...formData, managerId: e.target.value })}
                         required
-                        className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-gold-500"
+                        className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                       >
                         <option value="">Select a manager</option>
                         {users.map((user) => (
@@ -594,7 +584,7 @@ export default function NewProjectPage() {
                           return (
                             <div
                               key={userId}
-                              className="flex items-center space-x-1 px-2 py-1 bg-gold-500/20 border border-gold-500/30 rounded text-sm"
+                              className="flex items-center space-x-1 px-2 py-1 bg-primary/10 border border-primary/20 rounded text-sm"
                             >
                               <span className="text-foreground">
                                 {user.firstName} {user.lastName}
@@ -602,7 +592,7 @@ export default function NewProjectPage() {
                               <button
                                 type="button"
                                 onClick={() => toggleTeamMember(userId)}
-                                className="text-gold-600 hover:text-gold-700"
+                                className="text-primary hover:text-primary/80"
                               >
                                 <X className="w-3 h-3" />
                               </button>
@@ -685,7 +675,7 @@ export default function NewProjectPage() {
                                 onChange={(e) => updateIndicator(index, 'description', e.target.value)}
                                 placeholder="Describe what this indicator measures..."
                                 rows={2}
-                                className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold-500"
+                                className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                               />
                             </div>
 
@@ -695,7 +685,7 @@ export default function NewProjectPage() {
                                 <select
                                   value={indicator.type}
                                   onChange={(e) => updateIndicator(index, 'type', e.target.value as any)}
-                                  className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-gold-500"
+                                  className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                                 >
                                   <option value="quantitative">Quantitative</option>
                                   <option value="qualitative">Qualitative</option>
@@ -708,7 +698,7 @@ export default function NewProjectPage() {
                                   value={indicator.unit}
                                   onChange={(e) => updateIndicator(index, 'unit', e.target.value as any)}
                                   disabled={getAvailableUnits(indicator.type).length === 1}
-                                  className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-gold-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                  className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                   {getAvailableUnits(indicator.type).map((unit) => (
                                     <option key={unit} value={unit}>
@@ -822,7 +812,7 @@ export default function NewProjectPage() {
                   <Button
                     type="button"
                     onClick={nextStep}
-                    className="bg-gold-500 hover:bg-gold-600 text-charcoal-900"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
                   >
                     Next
                     <ChevronRight className="w-4 h-4 ml-2" />
@@ -832,7 +822,7 @@ export default function NewProjectPage() {
                     type="button"
                     onClick={() => setShowConfirmDialog(true)}
                     disabled={loading}
-                    className="bg-gold-500 hover:bg-gold-600 text-charcoal-900"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
                   >
                     <Check className="w-4 h-4 mr-2" />
                     Create Project
@@ -840,8 +830,6 @@ export default function NewProjectPage() {
                 )}
               </div>
             </div>
-          </div>
-        </div>
       </div>
 
       <TeamChat orgId={orgId} />
@@ -851,7 +839,7 @@ export default function NewProjectPage() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2">
-              <AlertTriangle className="w-5 h-5 text-gold-500" />
+              <AlertTriangle className="w-5 h-5 text-primary" />
               <span>Confirm Project Creation</span>
             </DialogTitle>
             <DialogDescription>
@@ -892,7 +880,7 @@ export default function NewProjectPage() {
               type="button"
               onClick={() => handleSubmit()}
               disabled={loading}
-              className="bg-gold-500 hover:bg-gold-600 text-charcoal-900"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               {loading ? (
                 <>
@@ -912,4 +900,3 @@ export default function NewProjectPage() {
     </div>
   )
 }
-
