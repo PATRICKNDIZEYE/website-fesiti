@@ -53,7 +53,14 @@ export default function RegisterPage() {
       )
       localStorage.setItem('token', response.access_token)
       localStorage.setItem('user', JSON.stringify(response.user))
-      router.push('/dashboard')
+
+      // Redirect to organization dashboard
+      if (response.user.organizationId) {
+        router.push(`/org/${response.user.organizationId}/dashboard`)
+      } else {
+        // Fallback if no organizationId (shouldn't happen with new multi-tenant setup)
+        router.push('/dashboard')
+      }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Registration failed')
     } finally {

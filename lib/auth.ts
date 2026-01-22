@@ -26,13 +26,15 @@ export const authService = {
     email: string,
     password: string,
     firstName: string,
-    lastName: string
+    lastName: string,
+    orgId?: string
   ): Promise<LoginResponse> => {
     const response = await api.post('/auth/register', {
       email,
       password,
       firstName,
       lastName,
+      orgId,
     })
     return response.data
   },

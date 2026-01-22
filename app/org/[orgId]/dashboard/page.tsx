@@ -8,9 +8,11 @@ import { TeamCard } from '@/components/TeamCard'
 import { TeamChat } from '@/components/TeamChat'
 import { WelcomeModal } from '@/components/WelcomeModal'
 import { OnboardingTour } from '@/components/OnboardingTour'
+import { OrganizationSetupModal } from '@/components/OrganizationSetupModal'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { orgApi } from '@/lib/api-helpers'
+import api from '@/lib/api'
 import { DashboardStats } from '@/lib/types'
 import { Users, FolderKanban, Target, TrendingUp, Loader2 } from 'lucide-react'
 
@@ -23,6 +25,8 @@ export default function DashboardPage() {
   const [showWelcomeModal, setShowWelcomeModal] = useState(false)
   const [showTour, setShowTour] = useState(false)
   const [userName, setUserName] = useState<string>('')
+  const [orgSetupRequired, setOrgSetupRequired] = useState(false)
+  const [checkingOrgSetup, setCheckingOrgSetup] = useState(true)
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -36,23 +40,45 @@ export default function DashboardPage() {
       return
     }
 
-    checkOnboardingStatus()
+    checkOrgSetupAndOnboarding()
     fetchDashboardData()
   }, [router, orgId])
 
-  const checkOnboardingStatus = () => {
+  const checkOrgSetupAndOnboarding = async () => {
     const userStr = localStorage.getItem('user')
     if (userStr) {
       try {
         const user = JSON.parse(userStr)
         setUserName(user.firstName || '')
-        // Show welcome modal if user hasn't completed onboarding
-        if (!user.hasCompletedOnboarding) {
-          setShowWelcomeModal(true)
-        }
       } catch (error) {
         console.error('Failed to parse user data:', error)
       }
+    }
+
+    // Require org setup before tour
+    try {
+      setCheckingOrgSetup(true)
+      const orgRes = await api.get(`/organizations/${orgId}`)
+      const setupCompleted = Boolean(orgRes.data?.settingsJson?.setupCompleted)
+      setOrgSetupRequired(!setupCompleted)
+
+      // Only show welcome modal (tour prompt) after org setup is completed
+      if (setupCompleted && userStr) {
+        try {
+          const user = JSON.parse(userStr)
+          if (!user.hasCompletedOnboarding) {
+            setShowWelcomeModal(true)
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+    } catch (e) {
+      console.error('Failed to check organization setup:', e)
+      // Safer default: require setup if we cannot verify
+      setOrgSetupRequired(true)
+    } finally {
+      setCheckingOrgSetup(false)
     }
   }
 
@@ -65,8 +91,6 @@ export default function DashboardPage() {
     setShowWelcomeModal(false)
     // Mark onboarding as complete when skipped
     try {
-      await orgApi.patch(orgId, 'users/profile/onboarding-complete', {})
-      
       // Update localStorage
       const userStr = localStorage.getItem('user')
       if (userStr) {
@@ -111,8 +135,17 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      <OrganizationSetupModal
+        orgId={orgId}
+        open={orgSetupRequired && !checkingOrgSetup}
+        onCompleted={async () => {
+          setOrgSetupRequired(false)
+          // Re-check and then show welcome modal if needed
+          await checkOrgSetupAndOnboarding()
+        }}
+      />
       <WelcomeModal
-        open={showWelcomeModal}
+        open={showWelcomeModal && !orgSetupRequired}
         onStartTour={handleStartTour}
         onSkip={handleSkipTour}
         userName={userName}
