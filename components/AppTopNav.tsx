@@ -32,6 +32,7 @@ import { authService } from '@/lib/auth'
 import { orgApi } from '@/lib/api-helpers'
 import { ConfirmationModal } from '@/components/ConfirmationModal'
 import { getTheme, setTheme, initTheme } from '@/lib/theme'
+import api from '@/lib/api'
 
 const navItems = [
   { label: 'Overview', path: 'dashboard', icon: LayoutDashboard },
@@ -56,6 +57,8 @@ export function AppTopNav({ orgId }: AppTopNavProps) {
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const [userAvatar, setUserAvatar] = useState<string | null>(null)
   const [userInitials, setUserInitials] = useState<string>('U')
+  const [userName, setUserName] = useState<string>('')
+  const [organizationName, setOrganizationName] = useState<string>('')
   const [imageError, setImageError] = useState(false)
   const [theme, setThemeState] = useState<'light' | 'dark'>('light')
 
@@ -111,9 +114,13 @@ export function AppTopNav({ orgId }: AppTopNavProps) {
       const user = JSON.parse(userStr)
       const firstName = user.firstName || ''
       const lastName = user.lastName || ''
+      
+      // Set user name for display
       if (firstName || lastName) {
+        setUserName(`${firstName} ${lastName}`.trim())
         setUserInitials(`${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase())
       } else if (user.email) {
+        setUserName(user.email.split('@')[0])
         setUserInitials(user.email.charAt(0).toUpperCase())
       }
 
@@ -130,6 +137,23 @@ export function AppTopNav({ orgId }: AppTopNavProps) {
       console.error('Failed to parse user data:', error)
     }
   }, [])
+
+  useEffect(() => {
+    const fetchOrganizationName = async () => {
+      try {
+        const response = await api.get(`/organizations/${orgId}`)
+        if (response.data?.name) {
+          setOrganizationName(response.data.name)
+        }
+      } catch (error) {
+        console.error('Failed to fetch organization name:', error)
+      }
+    }
+
+    if (orgId) {
+      fetchOrganizationName()
+    }
+  }, [orgId])
 
   const getHref = useCallback((path: string) => `/org/${orgId}/${path}`, [orgId])
 
@@ -248,8 +272,8 @@ export function AppTopNav({ orgId }: AppTopNavProps) {
 
             <Popover>
               <PopoverTrigger asChild>
-                <button className="hidden items-center gap-1.5 sm:gap-2 rounded-full border border-border bg-card px-2 py-1.5 text-left shadow-sm lg:flex min-w-0">
-                  <Avatar className="h-8 w-8 flex-shrink-0">
+                <button className="hidden items-center justify-center rounded-full border border-border bg-card p-1.5 shadow-sm lg:flex hover:bg-muted transition-colors">
+                  <Avatar className="h-9 w-9">
                     <AvatarImage
                       src={userAvatar ?? undefined}
                       onError={() => setImageError(true)}
@@ -259,16 +283,16 @@ export function AppTopNav({ orgId }: AppTopNavProps) {
                       {userInitials}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="pr-2 min-w-0 hidden xl:block">
-                    <div className="text-xs font-semibold text-foreground truncate">{activeLabel}</div>
-                    <div className="text-[11px] text-muted-foreground truncate">Workspace actions</div>
-                  </div>
                 </button>
               </PopoverTrigger>
               <PopoverContent align="end" className="w-64 p-0">
                 <div className="border-b border-border px-4 py-3">
-                  <div className="text-sm font-semibold text-foreground">Account</div>
-                  <div className="text-xs text-muted-foreground">Manage your workspace</div>
+                  <div className="text-sm font-semibold text-foreground truncate">
+                    {userName || 'User'}
+                  </div>
+                  <div className="text-xs text-muted-foreground truncate">
+                    {organizationName || 'Organization'}
+                  </div>
                 </div>
                 <div className="p-2">
                   <Link
@@ -321,7 +345,9 @@ export function AppTopNav({ orgId }: AppTopNavProps) {
               <SheetContent side="left" className="flex w-full flex-col gap-6 sm:max-w-sm">
                 <div>
                   <div className="text-lg font-semibold text-foreground">Navigation</div>
-                  <div className="text-sm text-muted-foreground">Active workspace</div>
+                  <div className="text-sm text-muted-foreground truncate">
+                    {organizationName || 'Organization'}
+                  </div>
                 </div>
                 <form onSubmit={handleSearch} className="relative">
                   <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -389,9 +415,13 @@ export function AppTopNav({ orgId }: AppTopNavProps) {
                         {userInitials}
                       </AvatarFallback>
                     </Avatar>
-                    <div>
-                      <div className="text-sm font-semibold text-foreground">Account</div>
-                      <div className="text-xs text-muted-foreground">Signed in</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-semibold text-foreground truncate">
+                        {userName || 'User'}
+                      </div>
+                      <div className="text-xs text-muted-foreground truncate">
+                        {organizationName || 'Organization'}
+                      </div>
                     </div>
                   </div>
                 </div>
