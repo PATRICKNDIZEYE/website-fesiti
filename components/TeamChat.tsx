@@ -131,7 +131,7 @@ export function TeamChat({ orgId }: TeamChatProps = {}) {
 
   if (chatCollapsed) {
     return (
-      <div className="w-12 bg-card border-l border-border flex flex-col h-screen fixed right-0 top-0 z-40">
+      <div className="w-12 bg-card border-l border-border flex flex-col fixed right-0 top-16 bottom-0 z-40">
         <Button
           variant="ghost"
           size="icon"
@@ -148,8 +148,8 @@ export function TeamChat({ orgId }: TeamChatProps = {}) {
   return (
     <div 
       className={cn(
-        "bg-card border-l border-border flex flex-col h-screen fixed right-0 top-0 z-40 transition-all duration-300",
-        expanded ? "fixed inset-0 z-50" : "w-80"
+        "bg-card border-l border-border flex flex-col fixed right-0 top-16 bottom-0 z-40 transition-all duration-300",
+        expanded ? "fixed inset-0 z-50 top-0" : "w-80"
       )}
       data-tour="team-chat"
     >

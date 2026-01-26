@@ -89,7 +89,7 @@ export default function ProjectsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full overflow-x-hidden">
       <Header
         title="Programs"
         subtitle="Portfolio tracking, milestones, and delivery cadence."
@@ -128,8 +128,8 @@ export default function ProjectsPage() {
                 </AlertDescription>
               </Alert>
             )}
-            <div className="flex items-center justify-between mb-6">
-              <div className="relative flex-1 max-w-md">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mb-6 w-full min-w-0">
+              <div className="relative flex-1 max-w-md w-full sm:w-auto min-w-0">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <input
                   type="text"
@@ -139,31 +139,31 @@ export default function ProjectsPage() {
                   className="pl-10 pr-4 py-2 w-full bg-card border border-border/70 rounded-full text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                 />
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 flex-shrink-0 min-w-0">
                 <div className="flex items-center space-x-1 bg-muted rounded-lg p-1">
                   <Button
                     variant={viewMode === 'grid' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setViewMode('grid')}
                     className={cn(
-                      "h-8 px-3",
+                      "h-8 px-2 sm:px-3 flex-shrink-0",
                       viewMode === 'grid' && "bg-primary text-primary-foreground hover:bg-primary/90"
                     )}
                   >
-                    <LayoutGrid className="w-4 h-4 mr-1" />
-                    Grid
+                    <LayoutGrid className="w-4 h-4 sm:mr-1" />
+                    <span className="hidden sm:inline">Grid</span>
                   </Button>
                   <Button
                     variant={viewMode === 'kanban' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setViewMode('kanban')}
                     className={cn(
-                      "h-8 px-3",
+                      "h-8 px-2 sm:px-3 flex-shrink-0",
                       viewMode === 'kanban' && "bg-primary text-primary-foreground hover:bg-primary/90"
                     )}
                   >
-                    <Columns3 className="w-4 h-4 mr-1" />
-                    Kanban
+                    <Columns3 className="w-4 h-4 sm:mr-1" />
+                    <span className="hidden sm:inline">Kanban</span>
                   </Button>
                 </div>
               </div>
@@ -173,24 +173,24 @@ export default function ProjectsPage() {
               <ProjectKanban projects={filteredProjects} onUpdate={fetchProjects} orgId={orgId} />
             ) : (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   {filteredProjects.map((project) => (
                     <Link
                       key={project.id}
                       href={`/org/${orgId}/projects/${project.id}`}
-                      className="bg-card rounded-xl border border-border/70 p-6 hover:shadow-lg transition-shadow"
+                      className="bg-card rounded-xl border border-border/70 p-4 sm:p-6 hover:shadow-lg transition-shadow overflow-hidden"
                     >
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-foreground mb-1">
+                      <div className="flex items-start justify-between mb-4 gap-2">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1 truncate">
                             {project.name}
                           </h3>
-                          <p className="text-sm text-muted-foreground line-clamp-2">
+                          <p className="text-sm text-muted-foreground line-clamp-2 break-words">
                             {project.description || 'No description'}
                           </p>
                         </div>
                         <span
-                          className={`px-2 py-1 text-xs font-medium rounded-full ${
+                          className={`px-2 py-1 text-xs font-medium rounded-full flex-shrink-0 whitespace-nowrap ${
                             project.status === 'active'
                               ? 'bg-primary/10 text-primary border border-primary/20'
                               : project.status === 'completed'

@@ -140,7 +140,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full overflow-x-hidden">
       <OrganizationSetupModal
         orgId={orgId}
         open={orgSetupRequired && !checkingOrgSetup}
@@ -166,9 +166,9 @@ export default function DashboardPage() {
         subtitle="High-level performance signals across programs and teams."
       />
 
-      <div className="space-y-8">
+      <div className="space-y-6 sm:space-y-8 w-full overflow-x-hidden">
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4" data-tour="stats">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4" data-tour="stats">
               <Card className="bg-card border-border/70 shadow-sm hover:shadow-md transition-shadow">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
@@ -235,14 +235,14 @@ export default function DashboardPage() {
             </div>
 
             {/* Team Progress Cards */}
-            <div data-tour="projects" className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-semibold text-foreground">Team Progress</h2>
+            <div data-tour="projects" className="space-y-4 w-full overflow-x-hidden">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <h2 className="text-lg sm:text-xl font-semibold text-foreground">Team Progress</h2>
                   <p className="text-sm text-muted-foreground">Latest program activity across teams.</p>
                 </div>
               </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 w-full">
                 {stats?.recentProjects && stats.recentProjects.length > 0 ? (
                   stats.recentProjects.map((project, index) => (
                     <TeamCard
@@ -261,29 +261,31 @@ export default function DashboardPage() {
             </div>
 
             {/* Timeline Section */}
-            <Card className="bg-card border-border/70 shadow-sm">
+            <Card className="bg-card border-border/70 shadow-sm w-full overflow-hidden">
               <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-xl text-foreground">Timeline</CardTitle>
-                    <p className="text-sm text-muted-foreground mt-1 flex items-center">
-                      <span className="mr-2">Date</span>
-                      {new Date().toLocaleDateString('en-US', { 
-                        year: 'numeric', 
-                        month: 'long', 
-                        day: 'numeric' 
-                      })}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <CardTitle className="text-lg sm:text-xl text-foreground">Timeline</CardTitle>
+                    <p className="text-sm text-muted-foreground mt-1 flex items-center flex-wrap gap-1">
+                      <span>Date</span>
+                      <span className="whitespace-nowrap">
+                        {new Date().toLocaleDateString('en-US', { 
+                          year: 'numeric', 
+                          month: 'long', 
+                          day: 'numeric' 
+                        })}
+                      </span>
                     </p>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="overflow-x-hidden">
                 <Tabs defaultValue="daily" className="w-full">
-                <TabsList className="grid w-full grid-cols-4 mb-6">
-                  <TabsTrigger value="daily">Daily</TabsTrigger>
-                  <TabsTrigger value="weekly">Weekly</TabsTrigger>
-                  <TabsTrigger value="monthly">Monthly</TabsTrigger>
-                  <TabsTrigger value="yearly">Yearly</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-6 gap-1 overflow-x-auto">
+                  <TabsTrigger value="daily" className="text-xs sm:text-sm whitespace-nowrap">Daily</TabsTrigger>
+                  <TabsTrigger value="weekly" className="text-xs sm:text-sm whitespace-nowrap">Weekly</TabsTrigger>
+                  <TabsTrigger value="monthly" className="text-xs sm:text-sm whitespace-nowrap">Monthly</TabsTrigger>
+                  <TabsTrigger value="yearly" className="text-xs sm:text-sm whitespace-nowrap">Yearly</TabsTrigger>
                 </TabsList>
                 <TabsContent value="daily" className="mt-0">
                     <div className="bg-muted/40 rounded-2xl p-8 border border-border/70">

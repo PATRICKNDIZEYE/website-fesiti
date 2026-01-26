@@ -55,6 +55,12 @@
   * {
     @apply border-border;
   }
+  
+  html {
+    overflow-x: hidden;
+    width: 100%;
+  }
+  
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-ibm-plex), 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
@@ -62,11 +68,32 @@
       radial-gradient(1200px 600px at 90% -10%, hsla(212, 60%, 88%, 0.35), transparent 60%),
       radial-gradient(900px 520px at -10% 20%, hsla(186, 45%, 82%, 0.35), transparent 55%);
     background-attachment: fixed;
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
   }
   
   /* Better font rendering */
   * {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Prevent horizontal overflow */
+  #__next,
+  [data-nextjs-scroll-focus-boundary] {
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+  }
+  
+  /* Hide scrollbar for sub-navigation */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 }

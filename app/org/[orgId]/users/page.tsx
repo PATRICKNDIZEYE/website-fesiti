@@ -268,91 +268,95 @@ export default function UsersPage() {
           />
         </div>
 
-        <div className="bg-card rounded-2xl border border-border/70 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-muted/50 border-b border-border/70">
-                <tr>
-                  <th className="text-left p-4 text-sm font-semibold text-foreground">User</th>
-                  <th className="text-left p-4 text-sm font-semibold text-foreground">Email</th>
-                  <th className="text-left p-4 text-sm font-semibold text-foreground">Role</th>
-                  <th className="text-left p-4 text-sm font-semibold text-foreground">Status</th>
-                  <th className="text-left p-4 text-sm font-semibold text-foreground">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredUsers.length === 0 ? (
+        <div className="bg-card rounded-2xl border border-border/70 overflow-hidden w-full">
+          <div className="overflow-x-auto -mx-4 sm:mx-0">
+            <div className="inline-block min-w-full align-middle">
+              <table className="w-full min-w-[640px]">
+                <thead className="bg-muted/50 border-b border-border/70">
                   <tr>
-                    <td colSpan={5} className="p-8 text-center text-muted-foreground">
-                      {searchQuery ? 'No users found' : 'No users yet'}
-                    </td>
+                    <th className="text-left p-3 sm:p-4 text-sm font-semibold text-foreground whitespace-nowrap">User</th>
+                    <th className="text-left p-3 sm:p-4 text-sm font-semibold text-foreground whitespace-nowrap">Email</th>
+                    <th className="text-left p-3 sm:p-4 text-sm font-semibold text-foreground whitespace-nowrap">Role</th>
+                    <th className="text-left p-3 sm:p-4 text-sm font-semibold text-foreground whitespace-nowrap">Status</th>
+                    <th className="text-left p-3 sm:p-4 text-sm font-semibold text-foreground whitespace-nowrap">Actions</th>
                   </tr>
-                ) : (
-                  filteredUsers.map((user) => (
-                    <tr key={user.id} className="border-b border-border/60 hover:bg-muted/40 transition-colors">
-                      <td className="p-4">
-                        <div className="flex items-center space-x-3">
-                          <Avatar>
-                            <AvatarFallback className="bg-primary/10 text-primary border border-primary/20">
-                              {getInitials(user)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium text-foreground">
-                              {user.firstName} {user.lastName}
-                            </p>
+                </thead>
+                <tbody>
+                  {filteredUsers.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="p-8 text-center text-muted-foreground">
+                        {searchQuery ? 'No users found' : 'No users yet'}
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredUsers.map((user) => (
+                      <tr key={user.id} className="border-b border-border/60 hover:bg-muted/40 transition-colors">
+                        <td className="p-3 sm:p-4">
+                          <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
+                            <Avatar className="flex-shrink-0">
+                              <AvatarFallback className="bg-primary/10 text-primary border border-primary/20">
+                                {getInitials(user)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0">
+                              <p className="font-medium text-foreground truncate">
+                                {user.firstName} {user.lastName}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="p-4 text-sm text-muted-foreground">{user.email}</td>
-                      <td className="p-4">
-                        <Badge className={getRoleColor(user.role)}>
-                          {user.role.replace('_', ' ')}
-                        </Badge>
-                      </td>
-                      <td className="p-4">
-                        <Badge
-                          variant={user.isActive ? 'default' : 'secondary'}
-                          className="cursor-pointer"
-                          onClick={() => handleToggleActive(user)}
-                        >
-                          {user.isActive ? (
-                            <>
-                              <Check className="w-3 h-3 mr-1" />
-                              Active
-                            </>
-                          ) : (
-                            'Inactive'
-                          )}
-                        </Badge>
-                      </td>
-                      <td className="p-4">
-                        <div className="flex items-center space-x-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => openEditDialog(user)}
-                            className="h-8 w-8"
+                        </td>
+                        <td className="p-3 sm:p-4 text-sm text-muted-foreground min-w-0">
+                          <span className="truncate block max-w-[200px]">{user.email}</span>
+                        </td>
+                        <td className="p-3 sm:p-4">
+                          <Badge className={getRoleColor(user.role)}>
+                            {user.role.replace('_', ' ')}
+                          </Badge>
+                        </td>
+                        <td className="p-3 sm:p-4">
+                          <Badge
+                            variant={user.isActive ? 'default' : 'secondary'}
+                            className="cursor-pointer"
+                            onClick={() => handleToggleActive(user)}
                           >
-                            <Edit2 className="w-4 h-4" />
-                          </Button>
-                          {currentUser?.id !== user.id && (
+                            {user.isActive ? (
+                              <>
+                                <Check className="w-3 h-3 mr-1" />
+                                Active
+                              </>
+                            ) : (
+                              'Inactive'
+                            )}
+                          </Badge>
+                        </td>
+                        <td className="p-3 sm:p-4">
+                          <div className="flex items-center space-x-1 sm:space-x-2">
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => handleDeleteClick(user.id)}
-                              className="h-8 w-8 text-destructive hover:text-destructive/80"
+                              onClick={() => openEditDialog(user)}
+                              className="h-8 w-8 flex-shrink-0"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Edit2 className="w-4 h-4" />
                             </Button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                            {currentUser?.id !== user.id && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDeleteClick(user.id)}
+                                className="h-8 w-8 text-destructive hover:text-destructive/80 flex-shrink-0"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>

@@ -177,7 +177,7 @@ function StatusColumn({
     <div
       ref={setNodeRef}
       className={cn(
-        "flex-1 min-w-[280px] bg-muted/30 rounded-lg p-4 transition-colors",
+        "flex-1 min-w-[280px] max-w-[400px] bg-muted/30 rounded-lg p-4 transition-colors",
         isOver && "bg-muted/50 ring-2 ring-primary/40"
       )}
     >
@@ -298,7 +298,7 @@ export function ProjectKanban({ projects, onUpdate, orgId }: ProjectKanbanProps)
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex gap-4 overflow-x-auto pb-4">
+      <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 sm:mx-0 px-4 sm:px-0">
         {statusColumns.map((column) => {
           const columnProjects = getProjectsByStatus(column.id)
           return (
