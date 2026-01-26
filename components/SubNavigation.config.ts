@@ -15,6 +15,11 @@ import {
   PieChart,
   LineChart,
   Activity,
+  Sparkles,
+  Brain,
+  TrendingDown,
+  AlertTriangle,
+  Lightbulb,
 } from 'lucide-react'
 
 export interface SubNavItem {
@@ -95,5 +100,14 @@ export const subNavigationConfig: SubNavigationConfig = {
       { label: 'Integrations', path: 'settings?tab=integrations', icon: Database },
     ],
     showIn: ['settings'],
+  },
+  'ai-insights': {
+    items: [
+      { label: 'Overview', path: 'ai-insights', icon: Sparkles },
+      { label: 'Predictions', path: 'ai-insights?tab=predictions', icon: Brain },
+      { label: 'Risk Alerts', path: 'ai-insights?tab=risks', icon: AlertTriangle },
+      { label: 'Recommendations', path: 'ai-insights?tab=recommendations', icon: Lightbulb },
+    ],
+    showIn: ['ai-insights'],
   },
 }

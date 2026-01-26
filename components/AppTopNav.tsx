@@ -19,6 +19,7 @@ import {
   LogOut,
   Sun,
   Moon,
+  Sparkles,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
@@ -36,6 +37,7 @@ const navItems = [
   { label: 'Overview', path: 'dashboard', icon: LayoutDashboard },
   { label: 'Programs', path: 'projects', icon: FolderKanban },
   { label: 'Analysis', path: 'visualization', icon: TrendingUp },
+  { label: 'AI Insights', path: 'ai-insights', icon: Sparkles },
   { label: 'Data Hub', path: 'data-import', icon: FileSpreadsheet },
   { label: 'Calendar', path: 'calendar', icon: Calendar },
   { label: 'Users', path: 'users', icon: Users },

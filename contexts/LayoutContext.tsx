@@ -13,6 +13,7 @@ const LayoutContext = createContext<LayoutContextType | undefined>(undefined)
 
 export function LayoutProvider({ children }: { children: ReactNode }) {
   const [sidebarCollapsed, setSidebarCollapsedState] = useState(false)
+  // Default chat to open (false = not collapsed = open)
   const [chatCollapsed, setChatCollapsedState] = useState(false)
 
   useEffect(() => {
@@ -21,8 +22,12 @@ export function LayoutProvider({ children }: { children: ReactNode }) {
     if (sidebarSaved === 'true') {
       setSidebarCollapsedState(true)
     }
+    // Only collapse chat if explicitly saved as 'true', otherwise keep it open
     if (chatSaved === 'true') {
       setChatCollapsedState(true)
+    } else {
+      // Ensure chat is open by default
+      setChatCollapsedState(false)
     }
   }, [])
 
