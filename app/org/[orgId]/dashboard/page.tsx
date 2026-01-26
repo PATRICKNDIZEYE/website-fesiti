@@ -73,10 +73,16 @@ export default function DashboardPage() {
           // ignore
         }
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error('Failed to check organization setup:', e)
-      // Safer default: require setup if we cannot verify
-      setOrgSetupRequired(true)
+      // If 401/403, user likely doesn't have permission yet - require setup
+      // Don't let this error trigger the global redirect
+      if (e.response?.status === 401 || e.response?.status === 403) {
+        setOrgSetupRequired(true)
+      } else {
+        // For other errors, also require setup as safer default
+        setOrgSetupRequired(true)
+      }
     } finally {
       setCheckingOrgSetup(false)
     }
@@ -236,7 +242,7 @@ export default function DashboardPage() {
                   <p className="text-sm text-muted-foreground">Latest program activity across teams.</p>
                 </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {stats?.recentProjects && stats.recentProjects.length > 0 ? (
                   stats.recentProjects.map((project, index) => (
                     <TeamCard
@@ -247,7 +253,7 @@ export default function DashboardPage() {
                     />
                   ))
                 ) : (
-                  <div className="col-span-4 text-center py-12 bg-card rounded-2xl border border-border/70">
+                  <div className="col-span-2 text-center py-12 bg-card rounded-2xl border border-border/70">
                     <p className="text-muted-foreground">No programs yet. Create your first program to get started.</p>
                   </div>
                 )}
