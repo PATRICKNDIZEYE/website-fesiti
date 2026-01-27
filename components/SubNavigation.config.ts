@@ -20,6 +20,8 @@ import {
   TrendingDown,
   AlertTriangle,
   Lightbulb,
+  Target,
+  Clock,
 } from 'lucide-react'
 
 export interface SubNavItem {
@@ -52,6 +54,14 @@ export const subNavigationConfig: SubNavigationConfig = {
       { label: 'Kanban View', path: 'projects?view=kanban', icon: FolderKanban },
     ],
     showIn: ['projects', 'projects/new', 'projects/[id]', 'projects/[id]/edit'],
+  },
+  'project-detail': {
+    items: [
+      { label: 'Program Details', path: 'projects/[id]', icon: FolderKanban },
+      { label: 'New Indicator', path: 'projects/[id]?action=new-indicator', icon: Target },
+      { label: 'Reporting Periods', path: 'projects/[id]/periods', icon: Clock },
+    ],
+    showIn: ['projects/[id]', 'projects/[id]/edit', 'projects/[id]/periods', 'projects/[id]/indicators', 'projects/[id]/indicators/[indicatorId]'],
   },
   visualization: {
     items: [

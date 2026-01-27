@@ -119,7 +119,7 @@ export default function DashboardPage() {
 
   const fetchDashboardData = async () => {
     try {
-      const response = await orgApi.get(orgId, 'dashboard')
+      const response = await orgApi.get(orgId, 'dashboards/stats')
       setStats(response.data)
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error)

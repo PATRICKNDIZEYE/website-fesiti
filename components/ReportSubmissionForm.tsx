@@ -173,11 +173,16 @@ export function ReportSubmissionForm({ projectId, indicatorId, onSuccess, orgId 
             className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50"
           >
             <option value="">Select an indicator</option>
-            {indicators.map((indicator) => (
-              <option key={indicator.id} value={indicator.id}>
-                {indicator.name} ({indicator.type}, {indicator.unit})
-              </option>
-            ))}
+            {indicators.map((indicator) => {
+              const unitDisplay = typeof indicator.unit === 'object' && indicator.unit
+                ? indicator.unit.name || indicator.unit.symbol
+                : indicator.unit || 'unit'
+              return (
+                <option key={indicator.id} value={indicator.id}>
+                  {indicator.name} ({indicator.type}, {unitDisplay})
+                </option>
+              )
+            })}
           </select>
           {selectedIndicator && (
             <p className="text-xs text-muted-foreground">{selectedIndicator.description}</p>

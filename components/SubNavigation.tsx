@@ -33,7 +33,13 @@ export function SubNavigation({ orgId }: SubNavigationProps) {
     // Handle nested routes (e.g., projects/[id] -> projects)
     let sectionKey = section
     if (section === 'projects' && pathParts.length > orgIndex + 3) {
-      sectionKey = 'projects' // Keep projects nav even in project detail pages
+      // Check if we're on a project detail page (not just projects list)
+      const nextPart = pathParts[orgIndex + 3]
+      if (nextPart && nextPart !== 'new' && !nextPart.startsWith('?')) {
+        sectionKey = 'project-detail' // Use project-detail nav for detail pages
+      } else {
+        sectionKey = 'projects' // Use projects nav for list/new pages
+      }
     }
     if (section === 'visualization' && pathParts.length > orgIndex + 3) {
       sectionKey = 'visualization' // Keep visualization nav in project visualization pages
@@ -75,6 +81,21 @@ export function SubNavigation({ orgId }: SubNavigationProps) {
   }
 
   const getHref = (path: string) => {
+    // Handle dynamic routes like projects/[id]
+    if (path.includes('[id]')) {
+      // Extract project ID from current pathname
+      const pathParts = pathname.split('/')
+      const orgIndex = pathParts.indexOf('org')
+      if (orgIndex !== -1 && pathParts.length > orgIndex + 3) {
+        const projectId = pathParts[orgIndex + 3]
+        const resolvedPath = path.replace('[id]', projectId)
+        if (resolvedPath.includes('?')) {
+          const [basePath, query] = resolvedPath.split('?')
+          return `/org/${orgId}/${basePath}?${query}`
+        }
+        return `/org/${orgId}/${resolvedPath}`
+      }
+    }
     // Handle query params in path
     if (path.includes('?')) {
       const [basePath, query] = path.split('?')
@@ -116,6 +137,26 @@ export function SubNavigation({ orgId }: SubNavigationProps) {
         return true // Highlight "All Programs" when viewing a project detail
       }
       if (itemPath === 'projects/new' && pathname.includes('/projects/new')) {
+        return true
+      }
+    }
+    
+    // For project-detail nav items
+    if (itemPath.includes('[id]')) {
+      const resolvedPath = itemPath.replace('[id]', pathname.split('/').find((_, i, arr) => arr[i-1] === 'projects' && i > 0) || '')
+      const currentPathAfterOrg = pathname.split('/').slice(pathname.split('/').indexOf('org') + 2).join('/')
+      if (resolvedPath.includes('?')) {
+        const [base, query] = resolvedPath.split('?')
+        if (currentPathAfterOrg.startsWith(base.split('/')[0] + '/')) {
+          const urlParams = new URLSearchParams(query)
+          const currentParams = new URLSearchParams(pathname.split('?')[1] || '')
+          let matches = true
+          urlParams.forEach((value, key) => {
+            if (currentParams.get(key) !== value) matches = false
+          })
+          if (matches) return true
+        }
+      } else if (currentPathAfterOrg === resolvedPath || currentPathAfterOrg.startsWith(resolvedPath + '/')) {
         return true
       }
     }

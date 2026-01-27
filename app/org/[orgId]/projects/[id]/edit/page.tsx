@@ -125,7 +125,10 @@ export default function EditProjectPage() {
             name: ind.name || '',
             description: ind.description || '',
             type: ind.type || 'quantitative',
-            unit: ind.unit || 'number',
+            // Handle unit as object or string
+            unit: typeof ind.unit === 'object' && ind.unit
+              ? (ind.unit.name?.toLowerCase() as any) || 'number'
+              : ind.unit || 'number',
           }))
         )
       }

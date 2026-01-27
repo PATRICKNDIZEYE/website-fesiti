@@ -47,9 +47,12 @@ export interface Program {
 export interface Indicator {
   id: string
   name: string
-  description?: string
+  definition?: string  // Backend uses 'definition', not 'description'
+  description?: string // Keep for backward compatibility
   type: 'quantitative' | 'qualitative' | 'percentage'
-  unit: 'number' | 'percentage' | 'currency' | 'text'
+  // Unit can be a string (legacy) or Unit object (new backend with relations)
+  unit: string | Unit | null
+  unitId?: string
   projectId: string
   resultsNodeId?: string
   direction?: 'increase' | 'decrease'
@@ -62,6 +65,7 @@ export interface Indicator {
   targets?: IndicatorTarget[]
   periods?: IndicatorPeriod[]
   schedules?: IndicatorSchedule[]
+  disaggregations?: IndicatorDisaggregation[]
   reports?: Report[] // Legacy
   submissions?: Submission[]
   createdAt: string
@@ -113,7 +117,7 @@ export interface Report {
 }
 
 // Submission Types (matching backend)
-export type SubmissionStatus = 'DRAFT' | 'SUBMITTED' | 'RETURNED' | 'APPROVED' | 'LOCKED'
+export type SubmissionStatus = 'draft' | 'submitted' | 'returned' | 'approved' | 'locked'
 
 export interface Submission {
   id: string
@@ -166,8 +170,18 @@ export interface Evidence {
   createdAt: string
 }
 
+// Unit Types (for indicator measurement)
+export interface Unit {
+  id: string
+  orgId: string
+  name: string
+  symbol?: string
+  unitType?: string
+  createdAt: string
+}
+
 // Indicator Period Types
-export type IndicatorPeriodStatus = 'OPEN' | 'CLOSED'
+export type IndicatorPeriodStatus = 'open' | 'closed'
 
 export interface IndicatorPeriod {
   id: string
@@ -185,8 +199,8 @@ export interface IndicatorPeriod {
   createdAt: string
 }
 
-export type IndicatorFrequency = 'MONTHLY' | 'QUARTERLY' | 'ANNUAL' | 'CUSTOM'
-export type CalendarType = 'GREGORIAN' | 'FISCAL'
+export type IndicatorFrequency = 'monthly' | 'quarterly' | 'annual' | 'custom'
+export type CalendarType = 'gregorian' | 'fiscal'
 
 export interface IndicatorSchedule {
   id: string
@@ -199,6 +213,32 @@ export interface IndicatorSchedule {
   timezone: string
   isOpenOnCreate: boolean
   createdAt: string
+}
+
+// Disaggregation Types
+export interface DisaggregationDef {
+  id: string
+  orgId: string
+  name: string
+  code?: string
+  values?: DisaggregationValue[]
+  createdAt: string
+}
+
+export interface DisaggregationValue {
+  id: string
+  disaggregationDefId: string
+  valueLabel: string
+  valueCode?: string
+  sortOrder: number
+  createdAt: string
+}
+
+export interface IndicatorDisaggregation {
+  id: string
+  indicatorId: string
+  disaggregationDefId: string
+  definition?: DisaggregationDef
 }
 
 // Approval Types
@@ -215,7 +255,7 @@ export interface ApprovalDecision {
   createdAt: string
 }
 
-export type ReviewTaskStatus = 'OPEN' | 'IN_REVIEW' | 'RESOLVED'
+export type ReviewTaskStatus = 'open' | 'in_review' | 'resolved'
 
 export interface ReviewTask {
   id: string
@@ -237,6 +277,29 @@ export interface Organization {
   settingsJson?: Record<string, any>
   createdAt: string
   updatedAt: string
+}
+
+// Organization membership types
+export type MembershipRole = 'owner' | 'admin' | 'member'
+
+export interface OrganizationMembership {
+  id: string
+  userId: string
+  orgId: string
+  membershipRole: MembershipRole
+  isDefault: boolean
+  organization: Organization
+  createdAt: string
+  updatedAt: string
+}
+
+export interface UserOrganization {
+  id: string
+  name: string
+  code?: string
+  type?: 'donor' | 'implementer' | 'partner'
+  role: MembershipRole
+  isDefault: boolean
 }
 
 export interface ProjectSite {

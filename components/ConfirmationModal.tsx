@@ -10,10 +10,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { AlertTriangle, Trash2, LogOut, Loader2 } from 'lucide-react'
+import { AlertTriangle, Trash2, LogOut, Loader2, Info, CheckCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-export type ConfirmationType = 'delete' | 'logout' | 'warning' | 'danger'
+export type ConfirmationType = 'delete' | 'logout' | 'warning' | 'danger' | 'default' | 'success'
 
 interface ConfirmationModalProps {
   open: boolean
@@ -47,6 +47,16 @@ const typeConfig: Record<ConfirmationType, { icon: React.ReactNode; iconBg: stri
     icon: <AlertTriangle className="w-5 h-5" />,
     iconBg: 'bg-red-500/20 border-red-500/30 text-red-500',
     buttonColor: 'bg-red-500 hover:bg-red-600 text-white',
+  },
+  default: {
+    icon: <Info className="w-5 h-5" />,
+    iconBg: 'bg-blue-500/20 border-blue-500/30 text-blue-500',
+    buttonColor: 'bg-primary hover:bg-primary/90 text-primary-foreground',
+  },
+  success: {
+    icon: <CheckCircle className="w-5 h-5" />,
+    iconBg: 'bg-green-500/20 border-green-500/30 text-green-500',
+    buttonColor: 'bg-green-500 hover:bg-green-600 text-white',
   },
 }
 

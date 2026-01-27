@@ -24,6 +24,19 @@ export default function LoginPage() {
   const [privacyOpen, setPrivacyOpen] = useState(false)
   const [theme, setThemeState] = useState<'light' | 'dark'>('light')
 
+  const clearAppStateForNewAuth = () => {
+    try {
+      const preservedTheme = localStorage.getItem('theme')
+      localStorage.clear()
+      if (preservedTheme) {
+        localStorage.setItem('theme', preservedTheme)
+      }
+    } catch (e) {
+      // Ignore storage errors
+      console.error('Failed to clear app state on auth change:', e)
+    }
+  }
+
   useEffect(() => {
     initTheme()
     setThemeState(getTheme())
@@ -41,15 +54,24 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
+      // Clear any previous user's state (drafts, org-specific data, etc.)
+      clearAppStateForNewAuth()
+
       const response = await authService.login(email, password)
-      localStorage.setItem('token', response.access_token)
-      localStorage.setItem('user', JSON.stringify(response.user))
+      authService.saveAuthData(response.access_token, response.user)
+
+      // Fetch and cache user organizations for the org switcher
+      try {
+        const orgs = await authService.getOrganizations()
+        authService.saveUserOrganizations(orgs)
+      } catch (orgErr) {
+        console.error('Failed to fetch organizations:', orgErr)
+      }
 
       // Redirect to organization dashboard
       if (response.user.organizationId) {
         router.push(`/org/${response.user.organizationId}/dashboard`)
       } else {
-        // Fallback if no organizationId (shouldn't happen with new multi-tenant setup)
         router.push('/dashboard')
       }
     } catch (err: any) {

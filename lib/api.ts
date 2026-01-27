@@ -65,20 +65,31 @@ api.interceptors.response.use(
         (method === 'get' && /\/organizations\/[^/]+(\?|$)/.test(url)) // GET /organizations/:id (with or without query params)
       )
       
-      if (isOrgSetupFlow) {
+      // Don't redirect for import history endpoints (let the UI show the error instead of logging out)
+      const isImportHistoryEndpoint = url.includes('/import-history')
+      
+      if (isOrgSetupFlow || isImportHistoryEndpoint) {
         // Don't redirect - let the component handle the error
-        // Return the error without clearing tokens or redirecting
-        console.log('Auth error on org setup endpoint, not redirecting:', url, error.response?.status)
+        console.log('Auth error on non-critical endpoint, not redirecting:', url, error.response?.status)
         return Promise.reject(error)
       }
       
       // For other endpoints, redirect to login
       // BUT: only redirect if we're not already on the login page
-      if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+      // AND: don't redirect if we're on a form submission page (let component handle error)
+      const isFormPage = typeof window !== 'undefined' && (
+        window.location.pathname.includes('/projects/new') ||
+        window.location.pathname.includes('/projects/[id]/edit')
+      )
+      
+      if (typeof window !== 'undefined' && !window.location.pathname.includes('/login') && !isFormPage) {
         console.log('Auth error, redirecting to login:', url, error.response?.status)
         localStorage.removeItem('token')
         localStorage.removeItem('user')
         window.location.href = '/login'
+      } else if (isFormPage) {
+        // On form pages, don't redirect - let component handle the error
+        console.log('Auth error on form page, not redirecting:', url, error.response?.status)
       }
     }
     return Promise.reject(error)

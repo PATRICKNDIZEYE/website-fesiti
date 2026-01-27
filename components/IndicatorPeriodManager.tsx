@@ -43,8 +43,8 @@ export function IndicatorPeriodManager({ indicatorId, orgId, onUpdate }: Indicat
 
   const handleToggleStatus = async (periodId: string, currentStatus: string) => {
     try {
-      const newStatus = currentStatus === 'OPEN' ? 'CLOSED' : 'OPEN'
-      await indicatorPeriodsApi.updateStatus(orgId, periodId, newStatus as 'OPEN' | 'CLOSED')
+      const newStatus = currentStatus === 'open' ? 'closed' : 'open'
+      await indicatorPeriodsApi.updateStatus(orgId, periodId, newStatus as 'open' | 'closed')
       fetchIndicatorAndPeriods()
       onUpdate?.()
     } catch (error: any) {
@@ -136,6 +136,7 @@ function PeriodCard({
   onToggleStatus: (id: string, status: string) => void
 }) {
   const [toggling, setToggling] = useState(false)
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
 
   const handleToggle = async () => {
     setToggling(true)
@@ -143,6 +144,7 @@ function PeriodCard({
       await onToggleStatus(period.id, period.status)
     } finally {
       setToggling(false)
+      setShowConfirmModal(false)
     }
   }
 
@@ -151,8 +153,26 @@ function PeriodCard({
   const dueDate = period.dueDate ? new Date(period.dueDate).toLocaleDateString() : null
   const submissionCount = period.submissions?.length || 0
 
+  const isOpen = period.status === 'open'
+  const actionText = isOpen ? 'Close' : 'Open'
+  const modalTitle = `${actionText} Period "${period.periodKey}"?`
+  const modalDescription = isOpen
+    ? 'Closing this period will prevent any new submissions from being made. Users will no longer be able to submit data for this reporting period. You can reopen it later if needed.'
+    : 'Opening this period will allow users to submit data again. Any previously submitted data will remain intact.'
+
   return (
     <div className="border border-border rounded-lg p-4 bg-card">
+      <ConfirmationModal
+        open={showConfirmModal}
+        onOpenChange={setShowConfirmModal}
+        onConfirm={handleToggle}
+        title={modalTitle}
+        description={modalDescription}
+        type={isOpen ? 'warning' : 'default'}
+        confirmText={`Yes, ${actionText} Period`}
+        cancelText="Cancel"
+      />
+      
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
@@ -160,7 +180,7 @@ function PeriodCard({
             <h4 className="font-semibold text-foreground">{period.periodKey}</h4>
             <span
               className={`text-xs px-2 py-1 rounded ${
-                period.status === 'OPEN'
+                isOpen
                   ? 'bg-green-500/10 text-green-600 dark:text-green-400'
                   : 'bg-gray-500/10 text-gray-600 dark:text-gray-400'
               }`}
@@ -185,7 +205,7 @@ function PeriodCard({
           </div>
         </div>
         <Button
-          onClick={handleToggle}
+          onClick={() => setShowConfirmModal(true)}
           disabled={toggling}
           variant="outline"
           size="sm"
@@ -193,7 +213,7 @@ function PeriodCard({
         >
           {toggling ? (
             <Loader2 className="w-4 h-4 animate-spin" />
-          ) : period.status === 'OPEN' ? (
+          ) : isOpen ? (
             <>
               <Lock className="w-4 h-4 mr-1" />
               Close

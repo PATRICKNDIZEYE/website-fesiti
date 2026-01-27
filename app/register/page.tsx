@@ -12,7 +12,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { TermsModal } from '@/components/TermsModal'
 import { PrivacyModal } from '@/components/PrivacyModal'
 import { getTheme, setTheme, initTheme } from '@/lib/theme'
-import { AlertCircle, Mail, Lock, User, ArrowRight, Sun, Moon } from 'lucide-react'
+import { AlertCircle, Mail, Lock, User, ArrowRight, Sun, Moon, Building2 } from 'lucide-react'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -21,12 +21,26 @@ export default function RegisterPage() {
     password: '',
     firstName: '',
     lastName: '',
+    organizationName: '',
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [termsOpen, setTermsOpen] = useState(false)
   const [privacyOpen, setPrivacyOpen] = useState(false)
   const [theme, setThemeState] = useState<'light' | 'dark'>('light')
+
+  const clearAppStateForNewAuth = () => {
+    try {
+      const preservedTheme = localStorage.getItem('theme')
+      localStorage.clear()
+      if (preservedTheme) {
+        localStorage.setItem('theme', preservedTheme)
+      }
+    } catch (e) {
+      // Ignore storage errors
+      console.error('Failed to clear app state on auth change:', e)
+    }
+  }
 
   useEffect(() => {
     initTheme()
@@ -45,20 +59,31 @@ export default function RegisterPage() {
     setLoading(true)
 
     try {
+      // Clear any previous user's state (drafts, org-specific data, etc.)
+      clearAppStateForNewAuth()
+
       const response = await authService.register(
         formData.email,
         formData.password,
         formData.firstName,
-        formData.lastName
+        formData.lastName,
+        undefined, // no orgId for self-registration
+        formData.organizationName || undefined
       )
-      localStorage.setItem('token', response.access_token)
-      localStorage.setItem('user', JSON.stringify(response.user))
+      authService.saveAuthData(response.access_token, response.user)
+
+      // Fetch and cache user organizations for the org switcher
+      try {
+        const orgs = await authService.getOrganizations()
+        authService.saveUserOrganizations(orgs)
+      } catch (orgErr) {
+        console.error('Failed to fetch organizations:', orgErr)
+      }
 
       // Redirect to organization dashboard
       if (response.user.organizationId) {
         router.push(`/org/${response.user.organizationId}/dashboard`)
       } else {
-        // Fallback if no organizationId (shouldn't happen with new multi-tenant setup)
         router.push('/dashboard')
       }
     } catch (err: any) {
@@ -174,6 +199,24 @@ export default function RegisterPage() {
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">Must be at least 6 characters</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="organizationName" className="text-foreground">
+                  Organization Name <span className="text-muted-foreground text-xs">(optional)</span>
+                </Label>
+                <div className="relative">
+                  <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="organizationName"
+                    type="text"
+                    placeholder="Your company or organization"
+                    value={formData.organizationName}
+                    onChange={(e) => setFormData({ ...formData, organizationName: e.target.value })}
+                    className="pl-10 bg-background border-border text-foreground placeholder:text-muted-foreground"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">We'll create an organization for you</p>
               </div>
 
               <div className="flex items-center space-x-2">

@@ -2,12 +2,12 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 
 import { useEffect, useState } from 'react'
-import { useRouter, useParams } from 'next/navigation'
+import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { Header } from '@/components/Header'
 import { TeamChat } from '@/components/TeamChat'
 import { IndicatorManager } from '@/components/IndicatorManager'
 import { ReportSubmissionForm } from '@/components/ReportSubmissionForm'
-import { ArrowLeft, Plus, BarChart3 } from 'lucide-react'
+import { ArrowLeft, Plus, BarChart3, ClipboardList } from 'lucide-react'
 import { orgApi } from '@/lib/api-helpers'
 import { Project } from '@/lib/types'
 import Link from 'next/link'
@@ -16,10 +16,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 export default function ProjectDetailPage() {
   const router = useRouter()
   const params = useParams()
+  const searchParams = useSearchParams()
   const orgId = params.orgId as string
   const projectId = params.id as string
   const [project, setProject] = useState<Project | null>(null)
   const [loading, setLoading] = useState(true)
+  const [showIndicatorForm, setShowIndicatorForm] = useState(false)
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -36,7 +38,15 @@ export default function ProjectDetailPage() {
     if (projectId) {
       fetchProject(projectId)
     }
-  }, [projectId, orgId, router])
+
+    // Check if we should show the indicator form
+    const action = searchParams.get('action')
+    if (action === 'new-indicator') {
+      setShowIndicatorForm(true)
+      // Remove query param from URL
+      router.replace(`/org/${orgId}/projects/${projectId}`, { scroll: false })
+    }
+  }, [projectId, orgId, router, searchParams])
 
   const fetchProject = async (id: string) => {
     try {
@@ -79,6 +89,13 @@ export default function ProjectDetailPage() {
                 <span>Back to Programs</span>
               </Link>
               <div className="flex flex-wrap items-center gap-2">
+                <Link
+                  href={`/org/${orgId}/projects/${project.id}/data-collection`}
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-full transition-colors text-sm font-medium flex items-center space-x-2"
+                >
+                  <ClipboardList className="w-4 h-4" />
+                  <span>Collect Data</span>
+                </Link>
                 <Link
                   href={`/org/${orgId}/visualization/${project.id}`}
                   className="px-4 py-2 bg-primary text-primary-foreground rounded-full transition-colors text-sm font-medium flex items-center space-x-2"
@@ -166,7 +183,9 @@ export default function ProjectDetailPage() {
                   <IndicatorManager 
                     projectId={project.id} 
                     onUpdate={() => fetchProject(project.id)} 
-                    orgId={orgId} 
+                    orgId={orgId}
+                    initialShowForm={showIndicatorForm}
+                    onFormToggle={(show) => setShowIndicatorForm(show)}
                   />
                 </div>
               </TabsContent>

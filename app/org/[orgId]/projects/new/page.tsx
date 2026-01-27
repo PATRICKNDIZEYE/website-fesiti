@@ -19,23 +19,17 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { orgApi } from '@/lib/api-helpers'
+import api from '@/lib/api'
 import { User } from '@/lib/types'
 import { Progress } from '@/components/ui/progress'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 
-interface IndicatorForm {
-  name: string
-  description: string
-  type: 'quantitative' | 'qualitative' | 'percentage'
-  unit: 'number' | 'percentage' | 'currency' | 'text'
-}
 
 const STEPS = [
   { id: 1, title: 'Project Info', description: 'Basic project information' },
   { id: 2, title: 'Team', description: 'Manager and team members' },
-  { id: 3, title: 'Indicators', description: 'Define what to measure' },
-  { id: 4, title: 'Review', description: 'Review and create' },
+  { id: 3, title: 'Review', description: 'Review and create' },
 ]
 
 const DRAFT_KEY = 'project_creation_draft'
@@ -63,7 +57,6 @@ export default function NewProjectPage() {
     teamMemberIds: [] as string[],
   })
 
-  const [indicators, setIndicators] = useState<IndicatorForm[]>([])
 
   useEffect(() => {
     if (!orgId) {
@@ -81,20 +74,88 @@ export default function NewProjectPage() {
     }, 1000) // Debounce: save 1 second after last change
 
     return () => clearTimeout(timer)
-  }, [formData, indicators, currentStep])
+  }, [formData, currentStep])
 
   const fetchUsers = async () => {
     try {
       setLoadingUsers(true)
-      const response = await orgApi.get(orgId, 'users')
-      setUsers(response.data)
-      // Set current user as default manager if available
-      const currentUser = JSON.parse(localStorage.getItem('user') || '{}')
-      if (currentUser.id && !formData.managerId) {
-        setFormData(prev => ({ ...prev, managerId: currentUser.id }))
+      
+      // First, get current user from localStorage
+      const currentUserStr = localStorage.getItem('user')
+      let currentUser: any = null
+      if (currentUserStr) {
+        try {
+          currentUser = JSON.parse(currentUserStr)
+        } catch (e) {
+          console.error('Failed to parse current user:', e)
+        }
       }
+      
+      // Try to fetch users from the org-scoped endpoint
+      let fetchedUsers: User[] = []
+      try {
+        const response = await orgApi.get(orgId, 'users')
+        fetchedUsers = response.data || []
+      } catch (error: any) {
+        // If org-scoped endpoint fails, try direct /users endpoint with orgId query
+        if (error.response?.status === 404 || error.response?.status === 403) {
+          try {
+            const response = await api.get(`/users?orgId=${orgId}`)
+            fetchedUsers = response.data || []
+          } catch (fallbackError) {
+            console.warn('Failed to fetch users. Will use current user only:', fallbackError)
+            fetchedUsers = []
+          }
+        } else {
+          console.warn('Failed to fetch users:', error)
+          fetchedUsers = []
+        }
+      }
+      
+      // Always ensure current user is in the list
+      if (currentUser?.id) {
+        const userExists = fetchedUsers.some(u => u.id === currentUser.id)
+        if (!userExists) {
+          fetchedUsers = [{
+            id: currentUser.id,
+            email: currentUser.email || '',
+            firstName: currentUser.firstName || 'You',
+            lastName: currentUser.lastName || '',
+            role: currentUser.role || 'manager',
+            isActive: true,
+            createdAt: new Date().toISOString(),
+          }, ...fetchedUsers]
+        }
+        // Auto-select current user as manager if not already set
+        if (!formData.managerId) {
+          setFormData(prev => ({ ...prev, managerId: currentUser.id }))
+        }
+      }
+      
+      setUsers(fetchedUsers)
     } catch (error) {
       console.error('Failed to fetch users:', error)
+      // Fallback: use current user only
+      const currentUserStr = localStorage.getItem('user')
+      if (currentUserStr) {
+        try {
+          const currentUser = JSON.parse(currentUserStr)
+          if (currentUser.id) {
+            setUsers([{
+              id: currentUser.id,
+              email: currentUser.email || '',
+              firstName: currentUser.firstName || 'You',
+              lastName: currentUser.lastName || '',
+              role: currentUser.role || 'manager',
+              isActive: true,
+              createdAt: new Date().toISOString(),
+            }])
+            setFormData(prev => ({ ...prev, managerId: currentUser.id }))
+          }
+        } catch (parseError) {
+          console.error('Failed to parse current user as fallback:', parseError)
+        }
+      }
     } finally {
       setLoadingUsers(false)
     }
@@ -106,7 +167,6 @@ export default function NewProjectPage() {
       if (draft) {
         const parsed = JSON.parse(draft)
         setFormData(parsed.formData || formData)
-        setIndicators(parsed.indicators || [])
         setCurrentStep(parsed.currentStep || 1)
       }
     } catch (error) {
@@ -119,7 +179,6 @@ export default function NewProjectPage() {
       setSaving(true)
       const draft = {
         formData,
-        indicators,
         currentStep,
         savedAt: new Date().toISOString(),
       }
@@ -143,63 +202,11 @@ export default function NewProjectPage() {
       managerId: '',
       teamMemberIds: [],
     })
-    setIndicators([])
     setCurrentStep(1)
     setSuccess('Draft cleared')
     setTimeout(() => setSuccess(''), 2000)
   }
 
-  const addIndicator = () => {
-    setIndicators([
-      ...indicators,
-      {
-        name: '',
-        description: '',
-        type: 'quantitative',
-        unit: 'number',
-      },
-    ])
-  }
-
-  const removeIndicator = (index: number) => {
-    setIndicators(indicators.filter((_, i) => i !== index))
-  }
-
-  const updateIndicator = (index: number, field: keyof IndicatorForm, value: string) => {
-    const updated = [...indicators]
-    updated[index] = { ...updated[index], [field]: value }
-    
-    // If type changes, update unit to match
-    if (field === 'type') {
-      const type = value as IndicatorForm['type']
-      let defaultUnit: IndicatorForm['unit'] = 'number'
-      
-      if (type === 'percentage') {
-        defaultUnit = 'percentage'
-      } else if (type === 'qualitative') {
-        defaultUnit = 'text'
-      } else if (type === 'quantitative') {
-        defaultUnit = 'number'
-      }
-      
-      updated[index].unit = defaultUnit
-    }
-    
-    setIndicators(updated)
-  }
-
-  const getAvailableUnits = (type: IndicatorForm['type']): IndicatorForm['unit'][] => {
-    switch (type) {
-      case 'quantitative':
-        return ['number', 'percentage', 'currency', 'text']
-      case 'qualitative':
-        return ['text']
-      case 'percentage':
-        return ['percentage']
-      default:
-        return ['number', 'percentage', 'currency', 'text']
-    }
-  }
 
   const toggleTeamMember = (userId: string) => {
     setFormData(prev => ({
@@ -276,32 +283,54 @@ export default function NewProjectPage() {
         return
       }
 
-      // Create project
-      const projectResponse = await orgApi.post(orgId, 'projects', {
+      // First, get or create a default program for this organization
+      let programId: string
+      try {
+        // Try to fetch existing programs
+        const programsResponse = await api.get(`/programs?orgId=${orgId}`)
+        const programs = programsResponse.data || []
+        
+        if (programs.length > 0) {
+          // Use the first program (or could let user select)
+          programId = programs[0].id
+        } else {
+          // Create a default program
+          const programResponse = await api.post('/programs', {
+            orgId,
+            name: `${formData.name} Program`, // Use project name as program name
+          })
+          programId = programResponse.data.id
+        }
+      } catch (programError: any) {
+        // If fetching programs fails, try creating one directly
+        try {
+          const programResponse = await api.post('/programs', {
+            orgId,
+            name: `${formData.name} Program`,
+          })
+          programId = programResponse.data.id
+        } catch (createError: any) {
+          console.error('Failed to create program:', createError)
+          const errorMessage = createError.response?.data?.message || 
+                              createError.message || 
+                              'Failed to create program. Please ensure you have the necessary permissions.'
+          setError(errorMessage)
+          setLoading(false)
+          return
+        }
+      }
+
+      // Create project with programId (backend endpoint is /projects, not /org/:orgId/projects)
+      const projectResponse = await api.post('/projects', {
+        programId,
         name: formData.name,
         description: formData.description || undefined,
         startDate: formData.startDate || undefined,
         endDate: formData.endDate || undefined,
-        managerId: formData.managerId,
-        teamMemberIds: formData.teamMemberIds.length > 0 ? formData.teamMemberIds : undefined,
         status: 'planning',
       })
 
       const projectId = projectResponse.data.id
-
-      // Create indicators
-      if (indicators.length > 0) {
-        const validIndicators = indicators.filter(ind => ind.name.trim())
-        for (const indicator of validIndicators) {
-          await orgApi.post(orgId, 'indicators', {
-            name: indicator.name,
-            description: indicator.description || undefined,
-            type: indicator.type,
-            unit: indicator.unit,
-            projectId,
-          })
-        }
-      }
 
       // Clear draft on success
       clearDraft()
@@ -309,8 +338,15 @@ export default function NewProjectPage() {
       // Redirect to project detail page
       router.push(`/org/${orgId}/projects/${projectId}`)
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message || 'Failed to create project')
-    } finally {
+      console.error('Project creation error:', err)
+      // Check if it's an auth error
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        const errorMessage = err.response?.data?.message || 
+                            'You do not have permission to create projects. Please contact your administrator.'
+        setError(errorMessage)
+      } else {
+        setError(err.response?.data?.message || err.message || 'Failed to create project')
+      }
       setLoading(false)
     }
   }
@@ -489,6 +525,38 @@ export default function NewProjectPage() {
                     <Label className="text-foreground">Manager *</Label>
                     {loadingUsers ? (
                       <div className="text-muted-foreground">Loading users...</div>
+                    ) : users.length === 0 ? (
+                      <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground">
+                          No users found. You will be set as the manager by default.
+                        </p>
+                        <select
+                          value={formData.managerId}
+                          onChange={(e) => setFormData({ ...formData, managerId: e.target.value })}
+                          required
+                          className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        >
+                          <option value="">Select a manager</option>
+                          {(() => {
+                            const currentUserStr = localStorage.getItem('user')
+                            if (currentUserStr) {
+                              try {
+                                const currentUser = JSON.parse(currentUserStr)
+                                if (currentUser.id) {
+                                  return (
+                                    <option value={currentUser.id}>
+                                      {currentUser.firstName || currentUser.name?.split(' ')[0] || 'You'} {currentUser.lastName || currentUser.name?.split(' ').slice(1).join(' ') || ''} ({currentUser.email || 'Current User'})
+                                    </option>
+                                  )
+                                }
+                              } catch (e) {
+                                console.error('Failed to parse current user:', e)
+                              }
+                            }
+                            return null
+                          })()}
+                        </select>
+                      </div>
                     ) : (
                       <select
                         value={formData.managerId}
@@ -605,124 +673,8 @@ export default function NewProjectPage() {
                 </div>
               )}
 
-              {/* Step 3: Indicators */}
+              {/* Step 3: Review */}
               {currentStep === 3 && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-foreground">Indicators</h3>
-                    <Button
-                      type="button"
-                      onClick={addIndicator}
-                      variant="outline"
-                      size="sm"
-                      className="border-border"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Indicator
-                    </Button>
-                  </div>
-
-                  <p className="text-sm text-muted-foreground">
-                    Define what you want to measure and track. You can add indicators later if needed.
-                  </p>
-
-                  {indicators.length === 0 ? (
-                    <div className="text-center py-12 border border-border rounded-lg bg-card">
-                      <p className="text-muted-foreground mb-4">No indicators added yet</p>
-                      <Button
-                        type="button"
-                        onClick={addIndicator}
-                        variant="outline"
-                        className="border-border"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Your First Indicator
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="space-y-3 max-h-96 overflow-y-auto">
-                      {indicators.map((indicator, index) => (
-                        <div key={index} className="border border-border rounded-lg p-4 bg-card">
-                          <div className="flex items-center justify-between mb-3">
-                            <h4 className="font-medium text-foreground">Indicator {index + 1}</h4>
-                            <Button
-                              type="button"
-                              onClick={() => removeIndicator(index)}
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
-                          </div>
-
-                          <div className="space-y-3">
-                            <div className="space-y-2">
-                              <Label className="text-foreground">Name *</Label>
-                              <Input
-                                value={indicator.name}
-                                onChange={(e) => updateIndicator(index, 'name', e.target.value)}
-                                placeholder="e.g., Number of beneficiaries reached"
-                                required
-                                className="bg-background border-border text-foreground"
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label className="text-foreground">Description</Label>
-                              <textarea
-                                value={indicator.description}
-                                onChange={(e) => updateIndicator(index, 'description', e.target.value)}
-                                placeholder="Describe what this indicator measures..."
-                                rows={2}
-                                className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-                              />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <Label className="text-foreground">Type</Label>
-                                <select
-                                  value={indicator.type}
-                                  onChange={(e) => updateIndicator(index, 'type', e.target.value as any)}
-                                  className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-                                >
-                                  <option value="quantitative">Quantitative</option>
-                                  <option value="qualitative">Qualitative</option>
-                                  <option value="percentage">Percentage</option>
-                                </select>
-                              </div>
-                              <div className="space-y-2">
-                                <Label className="text-foreground">Unit</Label>
-                                <select
-                                  value={indicator.unit}
-                                  onChange={(e) => updateIndicator(index, 'unit', e.target.value as any)}
-                                  disabled={getAvailableUnits(indicator.type).length === 1}
-                                  className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                  {getAvailableUnits(indicator.type).map((unit) => (
-                                    <option key={unit} value={unit}>
-                                      {unit.charAt(0).toUpperCase() + unit.slice(1)}
-                                    </option>
-                                  ))}
-                                </select>
-                                {getAvailableUnits(indicator.type).length === 1 && (
-                                  <p className="text-xs text-muted-foreground">
-                                    Unit is automatically set for {indicator.type} type
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Step 4: Review */}
-              {currentStep === 4 && (
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-foreground">Review Project Details</h3>
                   
@@ -761,7 +713,27 @@ export default function NewProjectPage() {
                         <div>
                           <span className="text-muted-foreground">Manager:</span>
                           <span className="ml-2 text-foreground">
-                            {users.find(u => u.id === formData.managerId)?.firstName} {users.find(u => u.id === formData.managerId)?.lastName}
+                            {(() => {
+                              const manager = users.find(u => u.id === formData.managerId)
+                              if (manager) {
+                                return `${manager.firstName} ${manager.lastName} (${manager.email})`
+                              }
+                              // Fallback: try to get from localStorage
+                              if (formData.managerId) {
+                                try {
+                                  const currentUserStr = localStorage.getItem('user')
+                                  if (currentUserStr) {
+                                    const currentUser = JSON.parse(currentUserStr)
+                                    if (currentUser.id === formData.managerId) {
+                                      return `${currentUser.firstName || 'You'} ${currentUser.lastName || ''} (${currentUser.email || 'Current User'})`
+                                    }
+                                  }
+                                } catch (e) {
+                                  console.error('Failed to parse current user:', e)
+                                }
+                              }
+                              return formData.managerId ? 'Unknown user' : 'Not selected'
+                            })()}
                           </span>
                         </div>
                         <div>
@@ -776,21 +748,10 @@ export default function NewProjectPage() {
                     </div>
 
                     <div className="border border-border rounded-lg p-4 bg-card">
-                      <h4 className="font-semibold text-foreground mb-3">Indicators</h4>
-                      {indicators.filter(ind => ind.name.trim()).length > 0 ? (
-                        <div className="space-y-2">
-                          {indicators.filter(ind => ind.name.trim()).map((indicator, index) => (
-                            <div key={index} className="text-sm p-2 bg-muted/50 rounded">
-                              <span className="font-medium text-foreground">{indicator.name}</span>
-                              <span className="ml-2 text-muted-foreground">
-                                ({indicator.type}, {indicator.unit})
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">No indicators added</p>
-                      )}
+                      <h4 className="font-semibold text-foreground mb-3">Next Steps</h4>
+                      <p className="text-sm text-muted-foreground">
+                        After creating the project, you can add indicators, set up reporting periods, and configure schedules from the project detail page.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -852,17 +813,37 @@ export default function NewProjectPage() {
               <p className="text-sm font-medium text-foreground mb-1">Project: {formData.name}</p>
               {formData.managerId && (
                 <p className="text-xs text-muted-foreground">
-                  Manager: {users.find(u => u.id === formData.managerId)?.firstName} {users.find(u => u.id === formData.managerId)?.lastName}
+                  Manager: {(() => {
+                  const manager = users.find(u => u.id === formData.managerId)
+                  if (manager) {
+                    return `${manager.firstName} ${manager.lastName}`
+                  }
+                  // Fallback: try to get from localStorage
+                  if (formData.managerId) {
+                    try {
+                      const currentUserStr = localStorage.getItem('user')
+                      if (currentUserStr) {
+                        const currentUser = JSON.parse(currentUserStr)
+                        if (currentUser.id === formData.managerId) {
+                          return `${currentUser.firstName || 'You'} ${currentUser.lastName || ''}`
+                        }
+                      }
+                    } catch (e) {
+                      // Ignore parse errors
+                    }
+                  }
+                  return 'Not selected'
+                })()}
                 </p>
               )}
               <p className="text-xs text-muted-foreground">
-                {formData.teamMemberIds.length} team member(s), {indicators.filter(ind => ind.name.trim()).length} indicator(s)
+                {formData.teamMemberIds.length} team member(s)
               </p>
             </div>
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription className="text-sm">
-                This action will create the project and all associated indicators. You can add more indicators and targets later.
+                This action will create the project. You can add indicators, schedules, and reporting periods from the project detail page.
               </AlertDescription>
             </Alert>
           </div>

@@ -31,6 +31,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { authService } from '@/lib/auth'
 import { orgApi } from '@/lib/api-helpers'
 import { ConfirmationModal } from '@/components/ConfirmationModal'
+import { OrgSwitcher } from '@/components/OrgSwitcher'
 import { getTheme, setTheme, initTheme } from '@/lib/theme'
 import api from '@/lib/api'
 
@@ -65,7 +66,7 @@ export function AppTopNav({ orgId }: AppTopNavProps) {
   useEffect(() => {
     const fetchActiveProjects = async () => {
       try {
-        const response = await orgApi.get(orgId, 'dashboard')
+        const response = await orgApi.get(orgId, 'dashboards/stats')
         setActiveProjects(response.data.stats?.activeProjects || 0)
       } catch (error) {
         console.error('Failed to fetch active projects:', error)
@@ -204,6 +205,9 @@ export function AppTopNav({ orgId }: AppTopNavProps) {
                 <div className="text-xs text-muted-foreground truncate">Enterprise monitoring workspace</div>
               </div>
             </Link>
+            <div className="hidden md:flex items-center border-l border-border pl-3 ml-1">
+              <OrgSwitcher currentOrgId={orgId} variant="default" />
+            </div>
           </div>
 
           <nav className="hidden items-center gap-1 xl:flex flex-shrink-0">
@@ -345,8 +349,8 @@ export function AppTopNav({ orgId }: AppTopNavProps) {
               <SheetContent side="left" className="flex w-full flex-col gap-6 sm:max-w-sm">
                 <div>
                   <div className="text-lg font-semibold text-foreground">Navigation</div>
-                  <div className="text-sm text-muted-foreground truncate">
-                    {organizationName || 'Organization'}
+                  <div className="mt-2">
+                    <OrgSwitcher currentOrgId={orgId} variant="default" className="w-full justify-start" />
                   </div>
                 </div>
                 <form onSubmit={handleSearch} className="relative">

@@ -2,20 +2,21 @@ import api from './api'
 import type { SubmissionStatus, IndicatorPeriodStatus } from './types'
 
 /**
- * Build API URL with organization ID
- * All tenant-scoped endpoints should use this helper
+ * Build API URL - the backend uses flat routes, not /org/:orgId prefix
+ * The orgId is passed via query params or request body, and JWT token
+ * contains the user's org for permission checks via OrgScopeGuard
  */
 export function buildOrgApiUrl(orgId: string, path: string): string {
   // Remove leading slash if present
   const cleanPath = path.startsWith('/') ? path.slice(1) : path
   
-  // If path already starts with org/:orgId, return as is
+  // If path already starts with org/, strip it (legacy frontend code)
   if (cleanPath.startsWith(`org/${orgId}/`)) {
-    return `/${cleanPath}`
+    return `/${cleanPath.replace(`org/${orgId}/`, '')}`
   }
   
-  // Otherwise, prepend org/:orgId
-  return `/org/${orgId}/${cleanPath}`
+  // Return clean path (backend uses flat routes like /projects, /programs, etc.)
+  return `/${cleanPath}`
 }
 
 /**
@@ -114,7 +115,7 @@ export const submissionsApi = {
    * Update submission status (approve/return/lock)
    */
   updateStatus: (orgId: string, id: string, data: {
-    status: 'APPROVED' | 'RETURNED' | 'LOCKED'
+    status: 'approved' | 'returned' | 'locked'
     decidedById: string
     reason?: string
   }) => orgApi.patch(orgId, `submissions/${id}/status`, data),
@@ -136,7 +137,7 @@ export const indicatorPeriodsApi = {
   }) => orgApi.post(orgId, 'indicators/periods', data),
 
   /**
-   * Update period status (OPEN/CLOSED)
+   * Update period status (open/closed)
    */
   updateStatus: (orgId: string, periodId: string, status: IndicatorPeriodStatus) =>
     orgApi.patch(orgId, `indicators/periods/${periodId}/status`, { status }),
@@ -159,8 +160,8 @@ export const indicatorSchedulesApi = {
    */
   create: (orgId: string, data: {
     indicatorId: string
-    frequency: 'MONTHLY' | 'QUARTERLY' | 'ANNUAL' | 'CUSTOM'
-    calendarType?: 'GREGORIAN' | 'FISCAL'
+    frequency: 'monthly' | 'quarterly' | 'annual' | 'custom'
+    calendarType?: 'gregorian' | 'fiscal'
     fiscalYearStartMonth?: number
     dueDaysAfterPeriodEnd?: number
     graceDays?: number
@@ -182,5 +183,106 @@ export const indicatorTargetsApi = {
     targetValue: number
     notes?: string
   }) => orgApi.post(orgId, 'indicators/targets', data),
+}
+
+/**
+ * Disaggregation API helpers
+ */
+export const disaggregationsApi = {
+  // Definitions (dimensions like Gender, Age Group, etc.)
+  listDefinitions: (orgId: string) => 
+    orgApi.get(orgId, `disaggregations/definitions?orgId=${orgId}`),
+  
+  createDefinition: (orgId: string, data: { name: string; code?: string }) =>
+    orgApi.post(orgId, 'disaggregations/definitions', { ...data, orgId }),
+  
+  // Values (Male, Female, 0-5, 6-17, etc.)
+  listValues: (orgId: string, defId: string) =>
+    orgApi.get(orgId, `disaggregations/definitions/${defId}/values`),
+  
+  addValue: (orgId: string, data: { disaggregationDefId: string; valueLabel: string; valueCode?: string; sortOrder?: number }) =>
+    orgApi.post(orgId, 'disaggregations/values', data),
+  
+  // Indicator-Disaggregation linking
+  getIndicatorDisaggregations: (orgId: string, indicatorId: string) =>
+    orgApi.get(orgId, `indicators/${indicatorId}/disaggregations`),
+  
+  linkToIndicator: (orgId: string, indicatorId: string, disaggregationDefIds: string[]) =>
+    orgApi.post(orgId, `indicators/${indicatorId}/disaggregations`, { disaggregationDefIds }),
+  
+  addToIndicator: (orgId: string, indicatorId: string, disaggregationDefId: string) =>
+    orgApi.post(orgId, `indicators/${indicatorId}/disaggregations/add`, { disaggregationDefId }),
+  
+  removeFromIndicator: (orgId: string, indicatorId: string, defId: string) =>
+    orgApi.delete(orgId, `indicators/${indicatorId}/disaggregations/${defId}`),
+}
+
+/**
+ * Data Collection (Shareable Forms) API helpers
+ */
+export const dataCollectionApi = {
+  // Authenticated endpoints (admin)
+  createLink: (orgId: string, data: {
+    indicatorId: string
+    indicatorPeriodId: string
+    title: string
+    description?: string
+    welcomeMessage?: string
+    thankYouMessage?: string
+    allowMultipleSubmissions?: boolean
+    requireName?: boolean
+    requireEmail?: boolean
+    requirePhone?: boolean
+    expiresAt?: string
+  }) => orgApi.post(orgId, 'data-collection/links', data),
+  
+  listLinks: (orgId: string, indicatorId?: string) =>
+    orgApi.get(orgId, indicatorId ? `data-collection/links?indicatorId=${indicatorId}` : 'data-collection/links'),
+  
+  getLink: (orgId: string, linkId: string) =>
+    orgApi.get(orgId, `data-collection/links/${linkId}`),
+  
+  getResponses: (orgId: string, linkId: string) =>
+    orgApi.get(orgId, `data-collection/links/${linkId}/responses`),
+  
+  getAggregatedResults: (orgId: string, linkId: string) =>
+    orgApi.get(orgId, `data-collection/links/${linkId}/aggregated`),
+  
+  updateLinkStatus: (orgId: string, linkId: string, status: 'active' | 'paused' | 'closed') =>
+    orgApi.patch(orgId, `data-collection/links/${linkId}/status`, { status }),
+  
+  deleteLink: (orgId: string, linkId: string) =>
+    orgApi.delete(orgId, `data-collection/links/${linkId}`),
+}
+
+/**
+ * Import History API helpers
+ */
+export const importHistoryApi = {
+  create: (orgId: string, data: {
+    indicatorId?: string
+    indicatorPeriodId?: string
+    importType: 'data_collection' | 'data_table' | 'bulk_update'
+    fileName: string
+    fileSize?: number
+    columnMappings?: Record<string, string>
+  }) => orgApi.post(orgId, 'import-history', data),
+  
+  list: (orgId: string, indicatorId?: string) =>
+    orgApi.get(orgId, indicatorId ? `import-history?indicatorId=${indicatorId}` : 'import-history'),
+  
+  get: (orgId: string, importId: string) =>
+    orgApi.get(orgId, `import-history/${importId}`),
+  
+  process: (orgId: string, importId: string, data: {
+    rows: { rowKey?: string; value: number; disaggregationValueIds?: string[]; isEstimated?: boolean; notes?: string }[]
+    submissionId: string
+  }) => orgApi.post(orgId, `import-history/${importId}/process`, data),
+  
+  download: (orgId: string, importId: string) =>
+    orgApi.get(orgId, `import-history/${importId}/download`),
+  
+  delete: (orgId: string, importId: string) =>
+    orgApi.delete(orgId, `import-history/${importId}`),
 }
 
