@@ -122,6 +122,37 @@ export const submissionsApi = {
 }
 
 /**
+ * Approval API helpers
+ */
+export const approvalsApi = {
+  list: (orgId: string, submissionId?: string) => {
+    const params = new URLSearchParams()
+    if (submissionId) params.append('submissionId', submissionId)
+    const query = params.toString()
+    return orgApi.get(orgId, query ? `approvals?${query}` : 'approvals')
+  },
+}
+
+/**
+ * Narratives API helpers
+ */
+export const narrativesApi = {
+  list: (orgId: string, projectId?: string, periodId?: string) => {
+    const params = new URLSearchParams()
+    if (projectId) params.append('projectId', projectId)
+    if (periodId) params.append('periodId', periodId)
+    const query = params.toString()
+    return orgApi.get(orgId, query ? `narratives?${query}` : 'narratives')
+  },
+  create: (orgId: string, data: { projectId: string; indicatorPeriodId: string; title: string; content: string }) =>
+    orgApi.post(orgId, 'narratives', data),
+  update: (orgId: string, id: string, data: { title?: string; content?: string }) =>
+    orgApi.patch(orgId, `narratives/${id}`, data),
+  delete: (orgId: string, id: string) =>
+    orgApi.delete(orgId, `narratives/${id}`),
+}
+
+/**
  * Indicator Period API helpers
  */
 export const indicatorPeriodsApi = {
@@ -244,6 +275,14 @@ export const dataCollectionApi = {
   
   getResponses: (orgId: string, linkId: string) =>
     orgApi.get(orgId, `data-collection/links/${linkId}/responses`),
+
+  listResponses: (orgId: string, indicatorId?: string, periodId?: string) => {
+    const params = new URLSearchParams()
+    if (indicatorId) params.set('indicatorId', indicatorId)
+    if (periodId) params.set('periodId', periodId)
+    const query = params.toString()
+    return orgApi.get(orgId, query ? `data-collection/responses?${query}` : 'data-collection/responses')
+  },
   
   getAggregatedResults: (orgId: string, linkId: string) =>
     orgApi.get(orgId, `data-collection/links/${linkId}/aggregated`),

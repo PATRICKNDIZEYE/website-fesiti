@@ -17,6 +17,7 @@ import {
   ChevronRight,
   TrendingUp,
   FileSpreadsheet,
+  ClipboardList,
   Users
 } from 'lucide-react'
 import { authService } from '@/lib/auth'
@@ -33,6 +34,7 @@ const menuItems = [
   { icon: MessageSquare, label: 'Messages', path: 'messages', hasBadge: true },
   { icon: TrendingUp, label: 'Visualization', path: 'visualization' },
   { icon: FileSpreadsheet, label: 'Data Import', path: 'data-import' },
+  { icon: ClipboardList, label: 'Submissions', path: 'submissions' },
   { icon: Calendar, label: 'Calendar', path: 'calendar' },
   { icon: FolderKanban, label: 'Project', path: 'projects' },
   { icon: Users, label: 'Users', path: 'users' },

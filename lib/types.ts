@@ -147,6 +147,7 @@ export interface SubmissionValue {
   id: string
   submissionId: string
   indicatorId: string
+  importId?: string | null
   questionId?: string
   disaggregationValueId?: string
   valueNumber?: number
@@ -156,6 +157,7 @@ export interface SubmissionValue {
   isEstimated: boolean
   notes?: string
   indicator?: Indicator
+  disaggregationValues?: DisaggregationValue[]
   createdAt: string
 }
 
@@ -231,6 +233,7 @@ export interface DisaggregationValue {
   valueLabel: string
   valueCode?: string
   sortOrder: number
+  definition?: DisaggregationDef
   createdAt: string
 }
 
@@ -337,5 +340,62 @@ export interface DashboardStats {
   recentProjects: Project[]
   recentReports: Report[]
   recentSubmissions?: Submission[]
+}
+
+// Data Collection (Public Forms)
+export enum LinkStatus {
+  ACTIVE = 'active',
+  PAUSED = 'paused',
+  CLOSED = 'closed',
+}
+
+export interface DataCollectionLink {
+  id: string
+  orgId: string
+  indicatorId: string
+  indicatorPeriodId: string
+  accessToken?: string
+  title: string
+  description?: string
+  welcomeMessage?: string
+  thankYouMessage?: string
+  allowMultipleSubmissions: boolean
+  requireName: boolean
+  requireEmail: boolean
+  requirePhone: boolean
+  expiresAt?: string
+  status: LinkStatus
+  responseCount?: number
+  indicator?: Indicator
+  indicatorPeriod?: IndicatorPeriod
+  createdAt: string
+}
+
+export interface FormResponse {
+  id: string
+  linkId: string
+  respondentName?: string | null
+  respondentEmail?: string | null
+  respondentPhone?: string | null
+  valueNumber?: number | null
+  valueText?: string | null
+  disaggregationValues?: string[] | null
+  isEstimated?: boolean
+  notes?: string | null
+  ipAddress?: string | null
+  userAgent?: string | null
+  createdAt: string
+  link?: DataCollectionLink
+}
+
+export interface PeriodNarrative {
+  id: string
+  orgId: string
+  projectId: string
+  indicatorPeriodId: string
+  title: string
+  content: string
+  createdAt: string
+  updatedAt: string
 }
 

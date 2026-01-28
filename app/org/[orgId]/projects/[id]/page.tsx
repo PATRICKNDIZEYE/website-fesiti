@@ -97,6 +97,12 @@ export default function ProjectDetailPage() {
                   <span>Collect Data</span>
                 </Link>
                 <Link
+                  href={`/org/${orgId}/projects/${project.id}/submissions`}
+                  className="px-4 py-2 bg-primary/10 text-primary rounded-full transition-colors text-sm font-medium"
+                >
+                  View Submissions
+                </Link>
+                <Link
                   href={`/org/${orgId}/visualization/${project.id}`}
                   className="px-4 py-2 bg-primary text-primary-foreground rounded-full transition-colors text-sm font-medium flex items-center space-x-2"
                 >

@@ -51,6 +51,10 @@ export function ImportHistoryView({
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [downloading, setDownloading] = useState<string | null>(null)
+  const [viewingDataId, setViewingDataId] = useState<string | null>(null)
+  const [dataRows, setDataRows] = useState<Record<string, any>[]>([])
+  const [dataLoading, setDataLoading] = useState(false)
+  const [dataError, setDataError] = useState('')
 
   useEffect(() => {
     fetchImports()
@@ -90,6 +94,34 @@ export function ImportHistoryView({
     } finally {
       setDownloading(null)
     }
+  }
+
+  const handleViewData = async (importRecord: ImportRecord) => {
+    try {
+      setDataError('')
+      setDataLoading(true)
+      setViewingDataId(importRecord.id)
+      const response = await orgApi.get(orgId, `import-history/${importRecord.id}/download`)
+      setDataRows(response.data || [])
+    } catch (err: any) {
+      setDataError(err.response?.data?.message || 'Failed to load import data')
+    } finally {
+      setDataLoading(false)
+    }
+  }
+
+  const getDisaggregationSummary = (rows: Record<string, any>[]) => {
+    const summary: Record<string, Record<string, number>> = {}
+    rows.forEach((row) => {
+      const value = Number(row.value) || 0
+      const disagg = row.disaggregations || {}
+      Object.entries(disagg).forEach(([key, label]) => {
+        if (!summary[key]) summary[key] = {}
+        const labelKey = String(label || 'Unknown')
+        summary[key][labelKey] = (summary[key][labelKey] || 0) + value
+      })
+    })
+    return summary
   }
 
   const handleDelete = async () => {
@@ -295,6 +327,27 @@ export function ImportHistoryView({
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation()
+                        if (viewingDataId === record.id) {
+                          setViewingDataId(null)
+                          setDataRows([])
+                          return
+                        }
+                        handleViewData(record)
+                      }}
+                      disabled={dataLoading && viewingDataId === record.id}
+                    >
+                      {dataLoading && viewingDataId === record.id ? (
+                        <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                      ) : (
+                        <FileSpreadsheet className="w-3 h-3 mr-1" />
+                      )}
+                      {viewingDataId === record.id ? 'Hide Data' : 'View Data'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation()
                         handleDownload(record)
                       }}
                       disabled={downloading === record.id}
@@ -320,6 +373,75 @@ export function ImportHistoryView({
                       Delete
                     </Button>
                   </div>
+
+                  {/* View Data Panel */}
+                  {viewingDataId === record.id && (
+                    <div className="mt-4 border border-border rounded-lg p-3 bg-card">
+                      {dataError && (
+                        <Alert variant="destructive" className="mb-3">
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertDescription>{dataError}</AlertDescription>
+                        </Alert>
+                      )}
+                      {dataLoading ? (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Loading import data...
+                        </div>
+                      ) : dataRows.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">No data rows found for this import.</p>
+                      ) : (
+                        <div className="space-y-4">
+                          <div className="text-sm">
+                            <span className="text-muted-foreground">Rows:</span>{' '}
+                            <span className="font-medium">{dataRows.length}</span>
+                          </div>
+
+                          {/* Disaggregation Summary */}
+                          {Object.entries(getDisaggregationSummary(dataRows)).map(([key, values]) => (
+                            <div key={key}>
+                              <p className="text-xs font-medium text-muted-foreground mb-2">Summary by {key}</p>
+                              <div className="flex flex-wrap gap-2">
+                                {Object.entries(values).map(([label, total]) => (
+                                  <span key={label} className="text-xs px-2 py-1 bg-muted rounded">
+                                    {label}: {total}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+
+                          {/* Data Table */}
+                          <div className="overflow-auto border border-border rounded">
+                            <table className="w-full text-xs">
+                              <thead className="bg-muted/50">
+                                <tr>
+                                  {Object.keys(dataRows[0].disaggregations || {}).map((key) => (
+                                    <th key={key} className="text-left px-2 py-1 font-medium">{key}</th>
+                                  ))}
+                                  <th className="text-left px-2 py-1 font-medium">Value</th>
+                                  <th className="text-left px-2 py-1 font-medium">Estimated</th>
+                                  <th className="text-left px-2 py-1 font-medium">Notes</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {dataRows.map((row, idx) => (
+                                  <tr key={idx} className="border-t border-border">
+                                    {Object.keys(row.disaggregations || {}).map((key) => (
+                                      <td key={key} className="px-2 py-1">{row.disaggregations?.[key] || ''}</td>
+                                    ))}
+                                    <td className="px-2 py-1">{row.value}</td>
+                                    <td className="px-2 py-1">{row.isEstimated ? 'Yes' : 'No'}</td>
+                                    <td className="px-2 py-1">{row.notes || ''}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>

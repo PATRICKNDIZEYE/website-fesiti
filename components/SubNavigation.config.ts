@@ -22,6 +22,7 @@ import {
   Lightbulb,
   Target,
   Clock,
+  ClipboardList,
 } from 'lucide-react'
 
 export interface SubNavItem {
@@ -60,8 +61,16 @@ export const subNavigationConfig: SubNavigationConfig = {
       { label: 'Program Details', path: 'projects/[id]', icon: FolderKanban },
       { label: 'New Indicator', path: 'projects/[id]?action=new-indicator', icon: Target },
       { label: 'Reporting Periods', path: 'projects/[id]/periods', icon: Clock },
+      { label: 'Submissions', path: 'projects/[id]/submissions', icon: ClipboardList },
     ],
-    showIn: ['projects/[id]', 'projects/[id]/edit', 'projects/[id]/periods', 'projects/[id]/indicators', 'projects/[id]/indicators/[indicatorId]'],
+    showIn: [
+      'projects/[id]',
+      'projects/[id]/edit',
+      'projects/[id]/periods',
+      'projects/[id]/indicators',
+      'projects/[id]/indicators/[indicatorId]',
+      'projects/[id]/submissions',
+    ],
   },
   visualization: {
     items: [
