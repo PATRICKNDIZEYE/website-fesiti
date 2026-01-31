@@ -1,11 +1,13 @@
 'use client'
 
 import { Unit } from '@/lib/types'
+import type { ResultsNode } from '@/lib/types'
 
 interface ReviewStepProps {
   indicatorData: {
     name: string
     unitId: string
+    resultsNodeId?: string
     direction: string
     aggregationRule: string
     baselineValue: string
@@ -16,12 +18,14 @@ interface ReviewStepProps {
   }
   periodsCount: number
   units: Unit[]
+  resultsNodes?: ResultsNode[]
 }
 
-export function ReviewStep({ indicatorData, scheduleData, periodsCount, units }: ReviewStepProps) {
+export function ReviewStep({ indicatorData, scheduleData, periodsCount, units, resultsNodes = [] }: ReviewStepProps) {
   // Ensure units is always an array
   const safeUnits = Array.isArray(units) ? units : []
   const selectedUnit = safeUnits.find(u => u.id === indicatorData.unitId)
+  const selectedObjective = resultsNodes.find(n => n.id === indicatorData.resultsNodeId)
 
   return (
     <div className="space-y-4">
@@ -32,6 +36,12 @@ export function ReviewStep({ indicatorData, scheduleData, periodsCount, units }:
             <span className="text-muted-foreground">Name:</span>{' '}
             <span className="ml-2 font-medium">{indicatorData.name}</span>
           </div>
+          {selectedObjective && (
+            <div>
+              <span className="text-muted-foreground">Project objective:</span>{' '}
+              <span className="ml-2">{selectedObjective.title}{selectedObjective.code ? ` (${selectedObjective.code})` : ''}</span>
+            </div>
+          )}
           <div>
             <span className="text-muted-foreground">Unit:</span>{' '}
             <span className="ml-2 font-medium text-primary">

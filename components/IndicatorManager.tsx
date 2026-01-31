@@ -9,8 +9,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Plus, X, Eye, ChevronUp, Trash2, Target, AlertCircle, Loader2, Calendar, Pencil, Link2 } from 'lucide-react'
 import Link from 'next/link'
 import { IndicatorCreationWizard } from './IndicatorCreationWizard'
-import { orgApi, disaggregationsApi } from '@/lib/api-helpers'
-import { Indicator, IndicatorTarget, Unit, DisaggregationDef } from '@/lib/types'
+import { orgApi, disaggregationsApi, indicatorInputsApi, resultsNodesApi, reportsApi } from '@/lib/api-helpers'
+import { Indicator, IndicatorTarget, Unit, DisaggregationDef, IndicatorInput, ResultsNode } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { ConfirmationModal } from '@/components/ConfirmationModal'
 import { ShareableFormManager } from './ShareableFormManager'
@@ -34,20 +34,21 @@ export function IndicatorManager({ projectId, onUpdate, orgId, initialShowForm, 
     fetchIndicators()
   }, [projectId])
 
-  const fetchIndicators = async () => {
+  const fetchIndicators = async (options?: { silent?: boolean }) => {
     if (!orgId) {
       console.error('Organization ID is required')
       return
     }
+    const silent = options?.silent
     try {
-      setLoading(true)
+      if (!silent) setLoading(true)
       const response = await orgApi.get(orgId, `indicators?projectId=${projectId}`)
       setIndicators(response.data)
     } catch (error) {
       console.error('Failed to fetch indicators:', error)
       setError('Failed to load indicators')
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
   }
 
@@ -68,7 +69,7 @@ export function IndicatorManager({ projectId, onUpdate, orgId, initialShowForm, 
       await orgApi.delete(orgId, `indicators/${indicatorToDelete}`)
       setShowDeleteModal(false)
       setIndicatorToDelete(null)
-      fetchIndicators()
+      fetchIndicators({ silent: true })
       onUpdate?.()
     } catch (error: any) {
       setError(error.response?.data?.message || 'Failed to delete indicator')
@@ -133,7 +134,7 @@ export function IndicatorManager({ projectId, onUpdate, orgId, initialShowForm, 
         onSuccess={() => {
           setShowAddForm(false)
           onFormToggle?.(false)
-          fetchIndicators()
+          fetchIndicators({ silent: true })
           onUpdate?.()
         }}
       />
@@ -158,7 +159,10 @@ export function IndicatorManager({ projectId, onUpdate, orgId, initialShowForm, 
               key={indicator.id}
               indicator={indicator}
               onDeleteClick={handleDeleteClick}
-              onUpdate={fetchIndicators}
+              onUpdate={() => {
+                fetchIndicators({ silent: true })
+                onUpdate?.()
+              }}
               orgId={orgId}
             />
           ))}
@@ -338,6 +342,132 @@ function AddIndicatorForm({
   )
 }
 
+function FormulaInputsSection({
+  indicator,
+  orgId,
+  onUpdate,
+}: {
+  indicator: Indicator
+  orgId: string
+  onUpdate: () => void
+}) {
+  const [showAdd, setShowAdd] = useState(false)
+  const [name, setName] = useState('')
+  const [inputType, setInputType] = useState<'numerator' | 'denominator' | 'value'>('numerator')
+  const [unitId, setUnitId] = useState('')
+  const [disaggIds, setDisaggIds] = useState<string[]>([])
+  const [units, setUnits] = useState<Unit[]>([])
+  const [disaggs, setDisaggs] = useState<DisaggregationDef[]>([])
+  const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+  const inputs = indicator.inputs || []
+
+  useEffect(() => {
+    if (!showAdd || !orgId) return
+    const load = async () => {
+      setLoading(true)
+      try {
+        const [uRes, dRes] = await Promise.all([
+          orgApi.get(orgId, 'units'),
+          disaggregationsApi.listDefinitions(orgId),
+        ])
+        setUnits(uRes.data || [])
+        setDisaggs(dRes.data || [])
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [showAdd, orgId])
+
+  const handleAdd = async () => {
+    if (!name.trim() || !orgId) return
+    setSaving(true)
+    setError('')
+    try {
+      await indicatorInputsApi.create(orgId, indicator.id, {
+        name: name.trim(),
+        inputType,
+        unitId: unitId || undefined,
+        disaggregationDefIds: disaggIds.length ? disaggIds : undefined,
+      })
+      setName('')
+      setUnitId('')
+      setDisaggIds([])
+      setShowAdd(false)
+      onUpdate()
+    } catch (e: any) {
+      setError(e.response?.data?.message || 'Failed to add input')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDelete = async (inputId: string) => {
+    if (!orgId) return
+    try {
+      await indicatorInputsApi.delete(orgId, inputId)
+      onUpdate()
+    } catch (e: any) {
+      setError(e.response?.data?.message || 'Failed to delete input')
+    }
+  }
+
+  return (
+    <div>
+      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Formula inputs</p>
+      <div className="space-y-2">
+        {inputs.map((inp: IndicatorInput) => (
+          <div key={inp.id} className="flex items-center justify-between text-sm bg-muted/50 rounded px-2 py-1">
+            <span>{inp.name} <span className="text-muted-foreground">({inp.inputType})</span> {inp.unit && typeof inp.unit === 'object' && ` · ${inp.unit.symbol || inp.unit.name}`}</span>
+            <Button type="button" variant="ghost" size="sm" className="h-6 text-destructive" onClick={() => handleDelete(inp.id)}>
+              <Trash2 className="w-3 h-3" />
+            </Button>
+          </div>
+        ))}
+        {!showAdd ? (
+          <Button type="button" variant="outline" size="sm" onClick={() => setShowAdd(true)}>
+            <Plus className="w-3 h-3 mr-1" />
+            Add input
+          </Button>
+        ) : (
+          <div className="border border-border rounded p-3 space-y-2 bg-background">
+            {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
+            <Input placeholder="Input name (e.g. Students who dropped out)" value={name} onChange={(e) => setName(e.target.value)} className="text-sm" />
+            <select value={inputType} onChange={(e) => setInputType(e.target.value as any)} className="w-full px-2 py-1.5 text-sm border rounded">
+              <option value="numerator">Numerator</option>
+              <option value="denominator">Denominator</option>
+              <option value="value">Value</option>
+            </select>
+            {loading ? <span className="text-xs">Loading...</span> : (
+              <>
+                <select value={unitId} onChange={(e) => setUnitId(e.target.value)} className="w-full px-2 py-1.5 text-sm border rounded">
+                  <option value="">Unit (optional)</option>
+                  {units.map((u) => <option key={u.id} value={u.id}>{u.name} {u.symbol ? `(${u.symbol})` : ''}</option>)}
+                </select>
+                <div className="text-xs text-muted-foreground">Disaggregations (optional):</div>
+                <div className="flex flex-wrap gap-1">
+                  {disaggs.map((d) => (
+                    <label key={d.id} className="flex items-center gap-1 text-xs">
+                      <input type="checkbox" checked={disaggIds.includes(d.id)} onChange={() => setDisaggIds(prev => prev.includes(d.id) ? prev.filter(id => id !== d.id) : [...prev, d.id])} />
+                      {d.name}
+                    </label>
+                  ))}
+                </div>
+              </>
+            )}
+            <div className="flex gap-2">
+              <Button type="button" size="sm" onClick={handleAdd} disabled={saving || !name.trim()}>{saving ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Save'}</Button>
+              <Button type="button" variant="ghost" size="sm" onClick={() => { setShowAdd(false); setError(''); }}>Cancel</Button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function IndicatorCard({
   indicator,
   onDeleteClick,
@@ -356,13 +486,21 @@ function IndicatorCard({
   const [targets, setTargets] = useState<IndicatorTarget[]>([])
   const [units, setUnits] = useState<Unit[]>([])
   const [unitsLoading, setUnitsLoading] = useState(false)
-  
   // Disaggregation state
   const [availableDisaggregations, setAvailableDisaggregations] = useState<DisaggregationDef[]>([])
   const [selectedDisaggregationIds, setSelectedDisaggregationIds] = useState<string[]>(
     indicator.disaggregations?.map(d => d.disaggregationDefId) || []
   )
   const [disaggLoading, setDisaggLoading] = useState(false)
+  const [resultsNodes, setResultsNodes] = useState<ResultsNode[]>([])
+  const [resultsNodesLoading, setResultsNodesLoading] = useState(false)
+  const [progress, setProgress] = useState<{
+    totalActual?: number
+    totalTarget?: number
+    overallProgressPercent?: number | null
+    periods: { periodKey: string; actual?: number; target?: number; progressPercent?: number | null; status: string }[]
+  } | null>(null)
+  const [progressLoading, setProgressLoading] = useState(false)
   
   // Get current unit ID
   const getCurrentUnitId = () => {
@@ -373,10 +511,16 @@ function IndicatorCard({
     return indicator.unitId || ''
   }
 
+  const getCurrentResultsNodeId = () => {
+    if (indicator.resultsNodeId) return indicator.resultsNodeId
+    const node = indicator.resultsNode as ResultsNode | undefined
+    return node?.id ?? ''
+  }
   const [editData, setEditData] = useState({
     name: indicator.name,
     description: indicator.definition || indicator.description || '',
     unitId: getCurrentUnitId(),
+    resultsNodeId: getCurrentResultsNodeId(),
     direction: indicator.direction || 'increase',
     aggregationRule: indicator.aggregationRule || 'sum',
     formulaExpr: indicator.formulaExpr || '',
@@ -402,6 +546,7 @@ function IndicatorCard({
       name: indicator.name,
       description: indicator.definition || indicator.description || '',
       unitId: getCurrentUnitId(),
+      resultsNodeId: getCurrentResultsNodeId(),
       direction: indicator.direction || 'increase',
       aggregationRule: indicator.aggregationRule || 'sum',
       formulaExpr: indicator.formulaExpr || '',
@@ -412,13 +557,54 @@ function IndicatorCard({
     })
   }, [indicator])
 
-  // Fetch units and disaggregations when edit form is opened
+  // Fetch units, disaggregations, and results nodes when edit form is opened
   useEffect(() => {
     if (showEditForm && orgId) {
       if (units.length === 0) fetchUnits()
       if (availableDisaggregations.length === 0) fetchDisaggregations()
+      if (resultsNodes.length === 0) fetchResultsNodes()
     }
   }, [showEditForm, orgId])
+
+  // Fetch progress when details are expanded
+  useEffect(() => {
+    if (showDetails && orgId && indicator.id) {
+      setProgressLoading(true)
+      reportsApi
+        .getIndicatorProgress(orgId, indicator.id)
+        .then((res) => {
+          setProgress({
+            totalActual: res.data?.totalActual,
+            totalTarget: res.data?.totalTarget,
+            overallProgressPercent: res.data?.overallProgressPercent,
+            periods: (res.data?.periods || []).map((p: any) => ({
+              periodKey: p.periodKey,
+              actual: p.actual,
+              target: p.target,
+              progressPercent: p.progressPercent,
+              status: p.status,
+            })),
+          })
+        })
+        .catch(() => setProgress(null))
+        .finally(() => setProgressLoading(false))
+    } else {
+      setProgress(null)
+    }
+  }, [showDetails, orgId, indicator.id])
+
+  const fetchResultsNodes = async () => {
+    if (!orgId || !indicator.projectId) return
+    try {
+      setResultsNodesLoading(true)
+      const response = await resultsNodesApi.list(orgId, indicator.projectId)
+      setResultsNodes(response.data || [])
+    } catch (err) {
+      console.error('Failed to fetch project objectives:', err)
+    } finally {
+      setResultsNodesLoading(false)
+    }
+  }
 
   const fetchUnits = async () => {
     if (!orgId) return
@@ -481,13 +667,15 @@ function IndicatorCard({
       setSaving(true)
       setEditError('')
       
-      // Save indicator data
+      // Save indicator data (include calcType so formula indicators get formula inputs section)
       await orgApi.patch(orgId, `indicators/${indicator.id}`, {
         name: editData.name,
         definition: editData.description || undefined,
         unitId: editData.unitId,
+        resultsNodeId: editData.resultsNodeId || null,
         direction: editData.direction,
         aggregationRule: editData.aggregationRule,
+        calcType: editData.aggregationRule === 'formula' ? 'formula' : 'direct',
         formulaExpr: editData.formulaExpr || undefined,
         baselineValue: editData.baselineValue ? parseFloat(editData.baselineValue) : undefined,
         baselineDate: editData.baselineDate || undefined,
@@ -645,6 +833,30 @@ function IndicatorCard({
                     className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground min-h-[80px]"
                     placeholder="Describe what this indicator measures, how it's calculated, and any important notes..."
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-foreground">Project objective (optional)</Label>
+                  <select
+                    value={editData.resultsNodeId}
+                    onChange={(e) => setEditData({ ...editData, resultsNodeId: e.target.value })}
+                    className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground"
+                  >
+                    <option value="">None – unassigned to objective</option>
+                    {resultsNodesLoading ? (
+                      <option disabled>Loading objectives...</option>
+                    ) : (
+                      resultsNodes.map((node) => (
+                        <option key={node.id} value={node.id}>
+                          {node.title}
+                          {node.code ? ` (${node.code})` : ''}
+                        </option>
+                      ))
+                    )}
+                  </select>
+                  <p className="text-xs text-muted-foreground">
+                    Links this indicator to a results framework objective for PITT and reporting.
+                  </p>
                 </div>
               </div>
 
@@ -831,6 +1043,7 @@ function IndicatorCard({
                       name: indicator.name,
                       description: indicator.definition || indicator.description || '',
                       unitId: getCurrentUnitId(),
+                      resultsNodeId: getCurrentResultsNodeId(),
                       direction: indicator.direction || 'increase',
                       aggregationRule: indicator.aggregationRule || 'sum',
                       formulaExpr: indicator.formulaExpr || '',
@@ -867,6 +1080,17 @@ function IndicatorCard({
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Type</p>
                   <p className="text-foreground mt-1 capitalize">{indicator.type}</p>
                 </div>
+                {(indicator.resultsNodeId || (indicator.resultsNode as ResultsNode | undefined)) && (
+                  <div className="col-span-2">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Project objective</p>
+                    <p className="text-foreground mt-1">
+                      {(indicator.resultsNode as ResultsNode)?.title ?? '—'}
+                      {(indicator.resultsNode as ResultsNode)?.code && (
+                        <span className="text-muted-foreground ml-1">({(indicator.resultsNode as ResultsNode).code})</span>
+                      )}
+                    </p>
+                  </div>
+                )}
                 <div>
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Unit</p>
                   <p className="text-foreground mt-1">{getUnitDisplay()}</p>
@@ -912,6 +1136,9 @@ function IndicatorCard({
                   <code className="text-foreground mt-1 text-sm bg-muted px-2 py-1 rounded block">{indicator.formulaExpr}</code>
                 </div>
               )}
+              {(indicator.calcType === 'formula' || indicator.aggregationRule === 'formula') && (
+                <FormulaInputsSection indicator={indicator} orgId={orgId || ''} onUpdate={onUpdate} />
+              )}
               {indicator.disaggregations && indicator.disaggregations.length > 0 && (
                 <div>
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Disaggregations</p>
@@ -930,6 +1157,102 @@ function IndicatorCard({
                       </span>
                     ))}
                   </div>
+                </div>
+              )}
+              {/* Progress: reported submissions vs targets (formula applied for formula indicators) */}
+              {orgId && (
+                <div className="border-t border-border/50 pt-3 space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Progress (reported vs targets)</p>
+                  <p className="text-xs text-muted-foreground">Only <strong>submitted</strong> or <strong>approved</strong> submissions are counted. Drafts are not included.</p>
+                  {progressLoading ? (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Loading…
+                    </div>
+                  ) : progress && (progress.periods?.length > 0 || progress.totalActual != null || progress.totalTarget != null) ? (
+                    <>
+                      <div className="flex flex-wrap items-center gap-3 text-sm">
+                        {progress.totalActual != null && (
+                          <span className="text-foreground">
+                            <span className="text-muted-foreground">Actual (reported):</span>{' '}
+                            <strong>{progress.totalActual}</strong> {getUnitDisplay()}
+                          </span>
+                        )}
+                        {progress.totalTarget != null && (
+                          <span className="text-foreground">
+                            <span className="text-muted-foreground">Target:</span>{' '}
+                            <strong>{progress.totalTarget}</strong> {getUnitDisplay()}
+                          </span>
+                        )}
+                        {progress.overallProgressPercent != null && (
+                          <span className="text-foreground">
+                            <span className="text-muted-foreground">Progress:</span>{' '}
+                            <strong>{progress.overallProgressPercent}%</strong>
+                          </span>
+                        )}
+                        {progress.periods?.some((p) => p.status && p.status !== 'no_data') && (
+                          <span
+                            className={cn(
+                              'text-xs px-2 py-1 rounded font-medium',
+                              progress.periods.some((p) => p.status === 'on_track')
+                                ? 'bg-green-500/10 text-green-600'
+                                : progress.periods.some((p) => p.status === 'at_risk')
+                                  ? 'bg-amber-500/10 text-amber-600'
+                                  : 'bg-red-500/10 text-red-600'
+                            )}
+                          >
+                            {progress.periods.some((p) => p.status === 'on_track')
+                              ? 'On track'
+                              : progress.periods.some((p) => p.status === 'at_risk')
+                                ? 'At risk'
+                                : progress.periods.some((p) => p.status === 'off_track')
+                                  ? 'Off track'
+                                  : 'No data'}
+                          </span>
+                        )}
+                      </div>
+                      {progress.periods && progress.periods.length > 0 && (
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-xs border border-border rounded">
+                            <thead className="bg-muted/50">
+                              <tr>
+                                <th className="px-2 py-1.5 text-left font-medium">Period</th>
+                                <th className="px-2 py-1.5 text-right font-medium">Actual</th>
+                                <th className="px-2 py-1.5 text-right font-medium">Target</th>
+                                <th className="px-2 py-1.5 text-right font-medium">Progress %</th>
+                                <th className="px-2 py-1.5 text-center font-medium">Status</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border">
+                              {progress.periods.map((p) => (
+                                <tr key={p.periodKey}>
+                                  <td className="px-2 py-1.5">{p.periodKey}</td>
+                                  <td className="px-2 py-1.5 text-right">{p.actual != null ? p.actual : '—'}</td>
+                                  <td className="px-2 py-1.5 text-right">{p.target != null ? p.target : '—'}</td>
+                                  <td className="px-2 py-1.5 text-right">{p.progressPercent != null ? `${p.progressPercent}%` : '—'}</td>
+                                  <td className="px-2 py-1.5 text-center">
+                                    <span
+                                      className={cn(
+                                        'px-1.5 py-0.5 rounded',
+                                        p.status === 'on_track' && 'bg-green-500/10 text-green-600',
+                                        p.status === 'at_risk' && 'bg-amber-500/10 text-amber-600',
+                                        p.status === 'off_track' && 'bg-red-500/10 text-red-600',
+                                        p.status === 'no_data' && 'text-muted-foreground'
+                                      )}
+                                    >
+                                      {p.status === 'on_track' ? 'On track' : p.status === 'at_risk' ? 'At risk' : p.status === 'off_track' ? 'Off track' : '—'}
+                                    </span>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </>
+                  ) : progress && !progressLoading ? (
+                    <p className="text-sm text-muted-foreground">No targets or reported data yet. Set targets and collect submissions to see progress.</p>
+                  ) : null}
                 </div>
               )}
               <div className="flex items-center gap-4 text-xs">

@@ -308,6 +308,7 @@ function CreateLinkForm({
 }) {
   const [title, setTitle] = useState(`${indicator.name} Data Collection`)
   const [description, setDescription] = useState('')
+  const [reportingUnitLabel, setReportingUnitLabel] = useState('School-level data')
   const [periodId, setPeriodId] = useState(openPeriods[0]?.id || '')
   const [requireName, setRequireName] = useState(false)
   const [requireEmail, setRequireEmail] = useState(false)
@@ -329,6 +330,7 @@ function CreateLinkForm({
         indicatorPeriodId: periodId,
         title,
         description: description || undefined,
+        reportingUnitLabel: reportingUnitLabel?.trim() || undefined,
         requireName,
         requireEmail,
         welcomeMessage: `Please provide your data for ${indicator.name}.`,
@@ -362,6 +364,17 @@ function CreateLinkForm({
             placeholder="Enter form title..."
             className="bg-background border-border"
           />
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-foreground">Reporting unit (shown on form)</Label>
+          <Input
+            value={reportingUnitLabel}
+            onChange={(e) => setReportingUnitLabel(e.target.value)}
+            placeholder="e.g. School-level data"
+            className="bg-background border-border"
+          />
+          <p className="text-xs text-muted-foreground">Clarifies what one submission represents (e.g. one school, one facility).</p>
         </div>
 
         <div className="space-y-2">

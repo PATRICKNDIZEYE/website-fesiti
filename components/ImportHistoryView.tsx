@@ -124,6 +124,16 @@ export function ImportHistoryView({
     return summary
   }
 
+  const groupRowsByInput = (rows: Record<string, any>[]) => {
+    const grouped: Record<string, Record<string, any>[]> = {}
+    rows.forEach((row) => {
+      const key = row.inputName || row.inputId || 'Value'
+      if (!grouped[key]) grouped[key] = []
+      grouped[key].push(row)
+    })
+    return grouped
+  }
+
   const handleDelete = async () => {
     if (!deleteId) return
     try {
@@ -411,11 +421,27 @@ export function ImportHistoryView({
                             </div>
                           ))}
 
+                          {dataRows.some((row) => row.inputName || row.inputId) && (
+                            <div>
+                              <p className="text-xs font-medium text-muted-foreground mb-2">Summary by Input</p>
+                              <div className="flex flex-wrap gap-2">
+                                {Object.entries(groupRowsByInput(dataRows)).map(([inputKey, rows]) => (
+                                  <span key={inputKey} className="text-xs px-2 py-1 bg-muted rounded">
+                                    {inputKey}: {rows.reduce((sum, row) => sum + (Number(row.value) || 0), 0)}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
                           {/* Data Table */}
                           <div className="overflow-auto border border-border rounded">
                             <table className="w-full text-xs">
                               <thead className="bg-muted/50">
                                 <tr>
+                                  {dataRows.some((row) => row.inputName || row.inputId) && (
+                                    <th className="text-left px-2 py-1 font-medium">Input</th>
+                                  )}
                                   {Object.keys(dataRows[0].disaggregations || {}).map((key) => (
                                     <th key={key} className="text-left px-2 py-1 font-medium">{key}</th>
                                   ))}
@@ -427,6 +453,9 @@ export function ImportHistoryView({
                               <tbody>
                                 {dataRows.map((row, idx) => (
                                   <tr key={idx} className="border-t border-border">
+                                    {dataRows.some((rowItem) => rowItem.inputName || rowItem.inputId) && (
+                                      <td className="px-2 py-1">{row.inputName || row.inputId || '-'}</td>
+                                    )}
                                     {Object.keys(row.disaggregations || {}).map((key) => (
                                       <td key={key} className="px-2 py-1">{row.disaggregations?.[key] || ''}</td>
                                     ))}

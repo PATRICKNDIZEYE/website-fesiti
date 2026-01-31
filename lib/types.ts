@@ -53,6 +53,7 @@ export interface Indicator {
   // Unit can be a string (legacy) or Unit object (new backend with relations)
   unit: string | Unit | null
   unitId?: string
+  calcType?: 'direct' | 'formula'
   projectId: string
   resultsNodeId?: string
   direction?: 'increase' | 'decrease'
@@ -66,10 +67,25 @@ export interface Indicator {
   periods?: IndicatorPeriod[]
   schedules?: IndicatorSchedule[]
   disaggregations?: IndicatorDisaggregation[]
+  inputs?: IndicatorInput[]
   reports?: Report[] // Legacy
   submissions?: Submission[]
+  resultsNode?: ResultsNode | null
   createdAt: string
   updatedAt: string
+}
+
+/** Project objective / outcome (results framework node) */
+export interface ResultsNode {
+  id: string
+  projectId: string
+  parentId?: string | null
+  nodeType: string
+  title: string
+  code?: string | null
+  description?: string | null
+  sortOrder?: number
+  createdAt: string
 }
 
 // Updated to match backend IndicatorTarget
@@ -126,6 +142,9 @@ export interface Submission {
   submittedById: string
   partnerOrgId?: string
   siteId?: string
+  /** Optional coordinates where data was collected (e.g. from GPS) */
+  latitude?: number | null
+  longitude?: number | null
   status: SubmissionStatus
   submittedAt?: string
   approvedAt?: string
@@ -147,6 +166,7 @@ export interface SubmissionValue {
   id: string
   submissionId: string
   indicatorId: string
+  inputId?: string | null
   importId?: string | null
   questionId?: string
   disaggregationValueId?: string
@@ -157,6 +177,7 @@ export interface SubmissionValue {
   isEstimated: boolean
   notes?: string
   indicator?: Indicator
+  input?: IndicatorInput
   disaggregationValues?: DisaggregationValue[]
   createdAt: string
 }
@@ -201,7 +222,7 @@ export interface IndicatorPeriod {
   createdAt: string
 }
 
-export type IndicatorFrequency = 'monthly' | 'quarterly' | 'annual' | 'custom'
+export type IndicatorFrequency = 'monthly' | 'quarterly' | 'termly' | 'annual' | 'custom'
 export type CalendarType = 'gregorian' | 'fiscal'
 
 export interface IndicatorSchedule {
@@ -227,12 +248,28 @@ export interface DisaggregationDef {
   createdAt: string
 }
 
+/** Location (for linking to disaggregation values or sites) */
+export interface Location {
+  id: string
+  orgId: string
+  name: string
+  code?: string | null
+  parentLocationId?: string | null
+  adminLevel?: number | null
+  lat?: number | null
+  lng?: number | null
+  createdAt: string
+}
+
 export interface DisaggregationValue {
   id: string
   disaggregationDefId: string
   valueLabel: string
   valueCode?: string
   sortOrder: number
+  /** Optional link to Location for lat/lng (e.g. when value represents a site) */
+  locationId?: string | null
+  location?: Location | null
   definition?: DisaggregationDef
   createdAt: string
 }
@@ -241,7 +278,23 @@ export interface IndicatorDisaggregation {
   id: string
   indicatorId: string
   disaggregationDefId: string
+  appliesTo?: 'value' | 'numerator' | 'denominator' | 'both'
   definition?: DisaggregationDef
+}
+
+export interface IndicatorInput {
+  id: string
+  indicatorId: string
+  name: string
+  code?: string | null
+  inputType: 'value' | 'numerator' | 'denominator'
+  unitId?: string | null
+  unit?: Unit | null
+  description?: string | null
+  isRequired: boolean
+  disaggregations?: { id: string; disaggregationDefId: string; definition?: DisaggregationDef }[]
+  createdAt: string
+  updatedAt: string
 }
 
 // Approval Types
@@ -382,10 +435,26 @@ export interface FormResponse {
   disaggregationValues?: string[] | null
   isEstimated?: boolean
   notes?: string | null
+  /** Optional coordinates (e.g. from "Capture location" / GPS) */
+  latitude?: number | null
+  longitude?: number | null
   ipAddress?: string | null
   userAgent?: string | null
+  values?: FormResponseValue[]
   createdAt: string
   link?: DataCollectionLink
+}
+
+export interface FormResponseValue {
+  id: string
+  responseId: string
+  inputId: string
+  input?: IndicatorInput
+  valueNumber?: number | null
+  valueText?: string | null
+  disaggregationValues?: string[] | null
+  isEstimated?: boolean
+  notes?: string | null
 }
 
 export interface PeriodNarrative {

@@ -19,7 +19,8 @@ import { ReviewStep } from './indicator-wizard/ReviewStep'
 import { generatePeriods, type Period } from './indicator-wizard/periodGenerator'
 import { validateWizardStep } from './indicator-wizard/wizardValidation'
 import { submitIndicatorWizard } from './indicator-wizard/wizardSubmission'
-import { orgApi } from '@/lib/api-helpers'
+import { orgApi, resultsNodesApi } from '@/lib/api-helpers'
+import type { ResultsNode } from '@/lib/types'
 
 interface IndicatorCreationWizardProps {
   open: boolean
@@ -50,13 +51,17 @@ export function IndicatorCreationWizard({
   // Units for indicator measurement
   const [units, setUnits] = useState<Unit[]>([])
   const [unitsLoading, setUnitsLoading] = useState(false)
+  // Project objectives (results nodes) for linking indicator
+  const [resultsNodes, setResultsNodes] = useState<ResultsNode[]>([])
+  const [resultsNodesLoading, setResultsNodesLoading] = useState(false)
 
-  // Fetch units when dialog opens
+  // Fetch units and results nodes when dialog opens
   useEffect(() => {
     if (open && orgId) {
       fetchUnits()
+      fetchResultsNodes()
     }
-  }, [open, orgId])
+  }, [open, orgId, projectId])
 
   const fetchUnits = async () => {
     setUnitsLoading(true)
@@ -70,11 +75,24 @@ export function IndicatorCreationWizard({
     }
   }
 
+  const fetchResultsNodes = async () => {
+    setResultsNodesLoading(true)
+    try {
+      const response = await resultsNodesApi.list(orgId, projectId)
+      setResultsNodes(response.data || [])
+    } catch (err) {
+      console.error('Failed to fetch project objectives:', err)
+    } finally {
+      setResultsNodesLoading(false)
+    }
+  }
+
   // Step 1: Indicator details
   const [indicatorData, setIndicatorData] = useState({
     name: '',
     definition: '',
     unitId: '',
+    resultsNodeId: '' as string,
     direction: 'increase' as 'increase' | 'decrease',
     aggregationRule: 'sum' as 'sum' | 'avg' | 'latest' | 'formula',
     formulaExpr: '',
@@ -150,6 +168,7 @@ export function IndicatorCreationWizard({
         name: '',
         definition: '',
         unitId: '',
+        resultsNodeId: '',
         direction: 'increase',
         aggregationRule: 'sum',
         formulaExpr: '',
@@ -223,6 +242,8 @@ export function IndicatorCreationWizard({
                 data={indicatorData}
                 units={units}
                 unitsLoading={unitsLoading}
+                resultsNodes={resultsNodes}
+                resultsNodesLoading={resultsNodesLoading}
                 orgId={orgId}
                 onChange={updateIndicatorData}
                 onUnitsRefresh={fetchUnits}
@@ -252,6 +273,7 @@ export function IndicatorCreationWizard({
                 scheduleData={scheduleData}
                 periodsCount={periodsData.length}
                 units={units}
+                resultsNodes={resultsNodes}
               />
             )}
           </div>

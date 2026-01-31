@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertCircle, Plus, X, Loader2 } from 'lucide-react'
 import { Unit } from '@/lib/types'
+import type { ResultsNode } from '@/lib/types'
 import { orgApi } from '@/lib/api-helpers'
 
 interface IndicatorDetailsStepProps {
@@ -14,6 +15,7 @@ interface IndicatorDetailsStepProps {
     name: string
     definition: string
     unitId: string
+    resultsNodeId: string
     direction: 'increase' | 'decrease'
     aggregationRule: 'sum' | 'avg' | 'latest' | 'formula'
     formulaExpr: string
@@ -24,12 +26,14 @@ interface IndicatorDetailsStepProps {
   }
   units: Unit[]
   unitsLoading: boolean
+  resultsNodes: ResultsNode[]
+  resultsNodesLoading: boolean
   orgId: string
   onChange: (field: string, value: any) => void
   onUnitsRefresh: () => Promise<void>
 }
 
-export function IndicatorDetailsStep({ data, units, unitsLoading, orgId, onChange, onUnitsRefresh }: IndicatorDetailsStepProps) {
+export function IndicatorDetailsStep({ data, units, unitsLoading, resultsNodes, resultsNodesLoading, orgId, onChange, onUnitsRefresh }: IndicatorDetailsStepProps) {
   // Ensure units is always an array
   const safeUnits = Array.isArray(units) ? units : []
   const selectedUnit = safeUnits.find(u => u.id === data.unitId)
@@ -83,6 +87,30 @@ export function IndicatorDetailsStep({ data, units, unitsLoading, orgId, onChang
         />
         <p className="text-xs text-muted-foreground">
           Include the unit in the name for clarity (e.g., "Cost per beneficiary (USD)")
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-foreground">Project objective (optional)</Label>
+        <select
+          value={data.resultsNodeId}
+          onChange={(e) => onChange('resultsNodeId', e.target.value)}
+          className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground"
+        >
+          <option value="">None – unassigned to objective</option>
+          {resultsNodesLoading ? (
+            <option disabled>Loading objectives...</option>
+          ) : (
+            resultsNodes.map((node) => (
+              <option key={node.id} value={node.id}>
+                {node.title}
+                {node.code ? ` (${node.code})` : ''}
+              </option>
+            ))
+          )}
+        </select>
+        <p className="text-xs text-muted-foreground">
+          Links this indicator to a results framework objective for PITT and reporting.
         </p>
       </div>
 

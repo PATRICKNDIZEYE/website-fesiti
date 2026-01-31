@@ -6,6 +6,7 @@ interface IndicatorData {
   name: string
   definition: string
   unitId: string
+  resultsNodeId?: string
   direction: 'increase' | 'decrease'
   aggregationRule: 'sum' | 'avg' | 'latest' | 'formula'
   formulaExpr: string
@@ -35,8 +36,10 @@ export async function submitIndicatorWizard(
     name: indicatorData.name,
     definition: indicatorData.definition || undefined,
     unitId: indicatorData.unitId, // Required - a value without units is meaningless
+    resultsNodeId: indicatorData.resultsNodeId || undefined,
     direction: indicatorData.direction,
     aggregationRule: indicatorData.aggregationRule,
+    calcType: indicatorData.aggregationRule === 'formula' ? 'formula' : undefined,
     formulaExpr: indicatorData.formulaExpr || undefined,
     baselineValue: indicatorData.baselineValue ? parseFloat(indicatorData.baselineValue) : undefined,
     baselineDate: indicatorData.baselineDate || undefined,

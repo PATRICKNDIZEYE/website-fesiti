@@ -7,7 +7,8 @@ import { Header } from '@/components/Header'
 import { TeamChat } from '@/components/TeamChat'
 import { IndicatorManager } from '@/components/IndicatorManager'
 import { ReportSubmissionForm } from '@/components/ReportSubmissionForm'
-import { ArrowLeft, Plus, BarChart3, ClipboardList } from 'lucide-react'
+import { ResultsNodesManager } from '@/components/ResultsNodesManager'
+import { ArrowLeft, Plus, BarChart3, ClipboardList, FileSpreadsheet } from 'lucide-react'
 import { orgApi } from '@/lib/api-helpers'
 import { Project } from '@/lib/types'
 import Link from 'next/link'
@@ -110,6 +111,13 @@ export default function ProjectDetailPage() {
                   <span>Create Charts</span>
                 </Link>
                 <Link
+                  href={`/org/${orgId}/projects/${project.id}/reports/pitt`}
+                  className="px-4 py-2 bg-primary/10 text-primary rounded-full transition-colors text-sm font-medium flex items-center space-x-2"
+                >
+                  <FileSpreadsheet className="w-4 h-4" />
+                  <span>PITT</span>
+                </Link>
+                <Link
                   href={`/org/${orgId}/projects/${project.id}/edit`}
                   className="px-4 py-2 bg-primary/10 text-primary rounded-full transition-colors text-sm font-medium"
                 >
@@ -179,10 +187,17 @@ export default function ProjectDetailPage() {
 
             <Tabs defaultValue="indicators" className="space-y-4">
               <TabsList className="bg-muted/30">
+                <TabsTrigger value="objectives">Objectives</TabsTrigger>
                 <TabsTrigger value="indicators">Indicators & Targets</TabsTrigger>
                 <TabsTrigger value="reports">Submit Report</TabsTrigger>
                 <TabsTrigger value="team">Team Members</TabsTrigger>
               </TabsList>
+
+              <TabsContent value="objectives" className="space-y-4">
+                <div className="bg-card rounded-2xl border border-border/70 p-6">
+                  <ResultsNodesManager projectId={project.id} orgId={orgId} />
+                </div>
+              </TabsContent>
 
               <TabsContent value="indicators" className="space-y-4">
                 <div className="bg-card rounded-2xl border border-border/70 p-6">

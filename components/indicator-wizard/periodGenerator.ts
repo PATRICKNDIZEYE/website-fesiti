@@ -50,6 +50,23 @@ export function generatePeriods(
         dueDate: dueDate.toISOString().split('T')[0],
       })
     }
+  } else if (frequency === 'termly') {
+    // 3 terms per year: Term 1 (Jan–Apr), Term 2 (May–Aug), Term 3 (Sep–Dec)
+    for (let i = 0; i < 6; i++) {
+      const termInCycle = i % 3
+      const year = currentYear + Math.floor(i / 3)
+      const startMonth = termInCycle * 4
+      const startDate = new Date(year, startMonth, 1)
+      const endDate = new Date(year, startMonth + 4, 0)
+      const dueDate = new Date(endDate)
+      dueDate.setDate(dueDate.getDate() + dueDaysAfterPeriodEnd)
+      periods.push({
+        periodKey: `Term ${termInCycle + 1}-${year}`,
+        startDate: startDate.toISOString().split('T')[0],
+        endDate: endDate.toISOString().split('T')[0],
+        dueDate: dueDate.toISOString().split('T')[0],
+      })
+    }
   } else if (frequency === 'annual') {
     for (let i = 0; i < 3; i++) {
       const year = currentYear + i

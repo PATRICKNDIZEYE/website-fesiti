@@ -7,8 +7,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Plus, X, Trash2, AlertCircle, Loader2, ChevronDown, ChevronRight, Edit2, Check } from 'lucide-react'
-import { disaggregationsApi } from '@/lib/api-helpers'
-import { DisaggregationDef, DisaggregationValue } from '@/lib/types'
+import { disaggregationsApi, locationsApi } from '@/lib/api-helpers'
+import { DisaggregationDef, DisaggregationValue, Location } from '@/lib/types'
 import { ConfirmationModal } from '@/components/ConfirmationModal'
 import { Header } from '@/components/Header'
 
@@ -329,8 +329,14 @@ function AddValueForm({
 }) {
   const [label, setLabel] = useState('')
   const [code, setCode] = useState('')
+  const [locationId, setLocationId] = useState('')
+  const [locations, setLocations] = useState<Location[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    locationsApi.list(orgId).then((res) => setLocations(res.data || [])).catch(() => {})
+  }, [orgId])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -347,6 +353,7 @@ function AddValueForm({
         valueLabel: label.trim(),
         valueCode: code.trim() || undefined,
         sortOrder: currentCount,
+        locationId: locationId.trim() || undefined,
       })
       onSuccess()
     } catch (err: any) {
@@ -364,31 +371,51 @@ function AddValueForm({
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
-      <form onSubmit={handleSubmit} className="flex items-end gap-2">
-        <div className="flex-1 space-y-1">
-          <Label className="text-xs text-muted-foreground">Value Label *</Label>
-          <Input
-            value={label}
-            onChange={(e) => setLabel(e.target.value)}
-            placeholder="e.g., Male, Female, 0-5 years"
-            className="bg-background border-border h-9"
-          />
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <div className="flex flex-wrap items-end gap-2">
+          <div className="flex-1 min-w-[120px] space-y-1">
+            <Label className="text-xs text-muted-foreground">Value Label *</Label>
+            <Input
+              value={label}
+              onChange={(e) => setLabel(e.target.value)}
+              placeholder="e.g., Male, Female, Kivumu"
+              className="bg-background border-border h-9"
+            />
+          </div>
+          <div className="w-24 space-y-1">
+            <Label className="text-xs text-muted-foreground">Code</Label>
+            <Input
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              placeholder="M, F"
+              className="bg-background border-border h-9"
+            />
+          </div>
+          {locations.length > 0 && (
+            <div className="min-w-[160px] space-y-1">
+              <Label className="text-xs text-muted-foreground">Link to location (lat/lng)</Label>
+              <select
+                value={locationId}
+                onChange={(e) => setLocationId(e.target.value)}
+                className="h-9 w-full rounded border border-border bg-background px-2 text-sm"
+              >
+                <option value="">None</option>
+                {locations.map((loc) => (
+                  <option key={loc.id} value={loc.id}>
+                    {loc.name}
+                    {loc.lat != null && loc.lng != null ? ` (${loc.lat}, ${loc.lng})` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          <Button type="submit" size="sm" disabled={loading} className="h-9">
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+          </Button>
+          <Button type="button" variant="outline" size="sm" onClick={onCancel} className="h-9">
+            <X className="w-4 h-4" />
+          </Button>
         </div>
-        <div className="w-24 space-y-1">
-          <Label className="text-xs text-muted-foreground">Code</Label>
-          <Input
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            placeholder="M, F"
-            className="bg-background border-border h-9"
-          />
-        </div>
-        <Button type="submit" size="sm" disabled={loading} className="h-9">
-          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-        </Button>
-        <Button type="button" variant="outline" size="sm" onClick={onCancel} className="h-9">
-          <X className="w-4 h-4" />
-        </Button>
       </form>
     </div>
   )

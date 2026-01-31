@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import { cn } from '@/lib/utils'
+import { BRANDING_ROWS, FESITI_BRANDING_TITLE } from '@/lib/excel-utils'
 
 interface ColumnMapping {
   sourceColumn: string
@@ -83,18 +84,28 @@ export function ExcelImportModal({
       const sheetNames = workbook.SheetNames
       const selectedSheet = sheetNames[0]
       const worksheet = workbook.Sheets[selectedSheet]
-      const jsonData = XLSX.utils.sheet_to_json<Record<string, any>>(worksheet, { header: 1 })
+      const jsonData = XLSX.utils.sheet_to_json<any[]>(worksheet, { header: 1 })
       
       if (jsonData.length < 2) {
         setError('File must have at least a header row and one data row')
         return
       }
 
-      const headers = (jsonData[0] as string[]).map(h => String(h || '').trim())
-      const rows = jsonData.slice(1).map((row: any) => {
+      // FESITI-branded sheets have 5 title rows; use the next row as the table header
+      const firstCell = String((jsonData[0] as any[])?.[0] ?? '').trim()
+      const headerRowIndex = firstCell === FESITI_BRANDING_TITLE ? BRANDING_ROWS : 0
+      const headerRow = jsonData[headerRowIndex] as any[]
+      if (!headerRow || headerRowIndex + 1 >= jsonData.length) {
+        setError('Could not find column headers in the file')
+        return
+      }
+
+      const headers = headerRow.map(h => String(h || '').trim())
+      const rows = jsonData.slice(headerRowIndex + 1).map((row: any) => {
+        const arr = Array.isArray(row) ? row : Object.values(row)
         const obj: Record<string, any> = {}
         headers.forEach((header, idx) => {
-          obj[header] = row[idx]
+          obj[header] = arr[idx]
         })
         return obj
       }).filter(row => Object.values(row).some(v => v !== undefined && v !== ''))

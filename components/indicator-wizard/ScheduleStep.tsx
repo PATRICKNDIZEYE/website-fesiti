@@ -27,6 +27,7 @@ export function ScheduleStep({ data, onChange }: ScheduleStepProps) {
         >
           <option value="monthly">Monthly</option>
           <option value="quarterly">Quarterly</option>
+          <option value="termly">Termly (3 terms/year)</option>
           <option value="annual">Annual</option>
           <option value="custom">Custom</option>
         </select>

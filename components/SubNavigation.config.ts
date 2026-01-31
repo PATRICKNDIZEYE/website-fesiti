@@ -62,6 +62,7 @@ export const subNavigationConfig: SubNavigationConfig = {
       { label: 'New Indicator', path: 'projects/[id]?action=new-indicator', icon: Target },
       { label: 'Reporting Periods', path: 'projects/[id]/periods', icon: Clock },
       { label: 'Submissions', path: 'projects/[id]/submissions', icon: ClipboardList },
+      { label: 'PITT', path: 'projects/[id]/reports/pitt', icon: FileSpreadsheet },
     ],
     showIn: [
       'projects/[id]',
@@ -70,6 +71,7 @@ export const subNavigationConfig: SubNavigationConfig = {
       'projects/[id]/indicators',
       'projects/[id]/indicators/[indicatorId]',
       'projects/[id]/submissions',
+      'projects/[id]/reports/pitt',
     ],
   },
   visualization: {

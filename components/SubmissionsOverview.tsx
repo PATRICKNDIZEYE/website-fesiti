@@ -37,7 +37,10 @@ type TabKey = 'submissions' | 'forms' | 'narratives'
    const [loading, setLoading] = useState(true)
    const [error, setError] = useState('')
    const [expandedId, setExpandedId] = useState<string | null>(null)
- 
+   const [convertLoading, setConvertLoading] = useState(false)
+   const [convertSuccess, setConvertSuccess] = useState('')
+   const [refreshKey, setRefreshKey] = useState(0)
+
    useEffect(() => {
      const load = async () => {
        try {
@@ -90,7 +93,7 @@ type TabKey = 'submissions' | 'forms' | 'narratives'
      }
  
      if (orgId) load()
-   }, [orgId, projectId])
+   }, [orgId, projectId, refreshKey])
 
   useEffect(() => {
     const userStr = localStorage.getItem('user')
@@ -108,7 +111,7 @@ type TabKey = 'submissions' | 'forms' | 'narratives'
      return values.some((v) => v.importId) ? 'Imported' : 'Manual'
    }
  
-   const summarizeDisaggregations = (values: SubmissionValue[] = []) => {
+  const summarizeDisaggregations = (values: SubmissionValue[] = []) => {
      const summary: Record<string, Record<string, number>> = {}
      values.forEach((value) => {
        const numberValue = Number(value.valueNumber) || 0
@@ -121,6 +124,9 @@ type TabKey = 'submissions' | 'forms' | 'narratives'
      })
      return summary
    }
+
+  const hasInputValues = (values?: SubmissionValue[]) =>
+    (values || []).some((value) => !!value.inputId || !!value.input?.name)
  
   const filteredSubmissions = useMemo(() => {
     const query = searchQuery.trim().toLowerCase()
@@ -185,10 +191,16 @@ type TabKey = 'submissions' | 'forms' | 'narratives'
        }, 0)
        return sum + submissionSum
      }, 0)
-     const formValueTotal = filteredFormResponses.reduce((sum, response) => {
-       const value = Number(response.valueNumber) || 0
-       return sum + value
-     }, 0)
+    const formValueTotal = filteredFormResponses.reduce((sum, response) => {
+      if (response.values && response.values.length > 0) {
+        const nestedTotal = response.values.reduce((valueSum, value) => {
+          return valueSum + (Number(value.valueNumber) || 0)
+        }, 0)
+        return sum + nestedTotal
+      }
+      const value = Number(response.valueNumber) || 0
+      return sum + value
+    }, 0)
  
      return {
        submissions: filteredSubmissions.length,
@@ -319,6 +331,25 @@ type TabKey = 'submissions' | 'forms' | 'narratives'
     }
   }
 
+  const handleConvertToSubmissions = async () => {
+    const ids = filteredFormResponses.map((r) => r.id)
+    if (ids.length === 0) return
+    try {
+      setConvertLoading(true)
+      setConvertSuccess('')
+      setStatusSuccess('')
+      setError('')
+      const res = await dataCollectionApi.convertToSubmissions(orgId, ids)
+      const created = res.data?.created ?? 0
+      setConvertSuccess(`${created} draft submission(s) created. Switch to System & Imports to submit or approve.`)
+      setRefreshKey((k) => k + 1)
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to create submissions from form responses')
+    } finally {
+      setConvertLoading(false)
+    }
+  }
+
    const availablePeriods = useMemo(() => {
      const map = new Map<string, IndicatorPeriod>()
      indicators.forEach((indicator) => {
@@ -397,9 +428,9 @@ type TabKey = 'submissions' | 'forms' | 'narratives'
            <AlertDescription>{error}</AlertDescription>
          </Alert>
        )}
-      {statusSuccess && (
+      {(statusSuccess || convertSuccess) && (
         <Alert className="border-green-500/30 bg-green-500/10 text-green-700">
-          <AlertDescription>{statusSuccess}</AlertDescription>
+          <AlertDescription>{statusSuccess || convertSuccess}</AlertDescription>
         </Alert>
       )}
  
@@ -471,34 +502,42 @@ type TabKey = 'submissions' | 'forms' | 'narratives'
         )}
       </div>
 
-      {selectedPeriod && (
+      {(availablePeriods.length > 0 || filteredSubmissions.length > 0) && (
         <div className="border border-border rounded-lg bg-card p-4 space-y-3">
           <div className="flex flex-wrap items-center gap-3 justify-between">
             <div>
-              <p className="text-sm font-medium">Reporting Period Status</p>
-              <p className="text-xs text-muted-foreground">
-                {selectedPeriod.periodKey} • {selectedPeriod.status}
-              </p>
+              <p className="text-sm font-medium">Submit &amp; approve reports</p>
+              {selectedPeriod ? (
+                <p className="text-xs text-muted-foreground">
+                  Period: <span className="font-medium text-foreground">{selectedPeriod.periodKey}</span> • {selectedPeriod.status}
+                </p>
+              ) : (
+                <p className="text-xs text-amber-600">
+                  Select a <strong>Period</strong> above (e.g. 2026-01) to submit or approve submissions for that period.
+                </p>
+              )}
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" onClick={() => openStatusModal('submit')} disabled={!canSubmitAll || statusUpdating}>
+              <Button variant="outline" size="sm" onClick={() => openStatusModal('submit')} disabled={!selectedPeriod || !canSubmitAll || statusUpdating} title={!selectedPeriod ? 'Select a period first' : undefined}>
                 Submit All
               </Button>
-              <Button variant="outline" size="sm" onClick={() => openStatusModal('return')} disabled={!canReturnAll || statusUpdating}>
+              <Button variant="outline" size="sm" onClick={() => openStatusModal('return')} disabled={!selectedPeriod || !canReturnAll || statusUpdating} title={!selectedPeriod ? 'Select a period first' : undefined}>
                 Return All
               </Button>
-              <Button variant="outline" size="sm" onClick={() => openStatusModal('approve')} disabled={!canApproveAll || statusUpdating}>
+              <Button variant="outline" size="sm" onClick={() => openStatusModal('approve')} disabled={!selectedPeriod || !canApproveAll || statusUpdating} title={!selectedPeriod ? 'Select a period first' : undefined}>
                 Approve All
               </Button>
             </div>
           </div>
-          <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
-            <span>Draft: <span className="font-medium text-foreground">{statusCounts.draft}</span></span>
-            <span>Submitted: <span className="font-medium text-foreground">{statusCounts.submitted}</span></span>
-            <span>Returned: <span className="font-medium text-foreground">{statusCounts.returned}</span></span>
-            <span>Approved: <span className="font-medium text-foreground">{statusCounts.approved}</span></span>
-            <span>Locked: <span className="font-medium text-foreground">{statusCounts.locked}</span></span>
-          </div>
+          {selectedPeriod && (
+            <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+              <span>Draft: <span className="font-medium text-foreground">{statusCounts.draft}</span></span>
+              <span>Submitted: <span className="font-medium text-foreground">{statusCounts.submitted}</span></span>
+              <span>Returned: <span className="font-medium text-foreground">{statusCounts.returned}</span></span>
+              <span>Approved: <span className="font-medium text-foreground">{statusCounts.approved}</span></span>
+              <span>Locked: <span className="font-medium text-foreground">{statusCounts.locked}</span></span>
+            </div>
+          )}
         </div>
       )}
  
@@ -656,6 +695,9 @@ type TabKey = 'submissions' | 'forms' | 'narratives'
                          <table className="w-full text-xs">
                            <thead className="bg-muted/50">
                              <tr>
+                               {hasInputValues(submission.values) && (
+                                 <th className="text-left px-2 py-1">Input</th>
+                               )}
                                <th className="text-left px-2 py-1">Value</th>
                                <th className="text-left px-2 py-1">Estimated</th>
                                <th className="text-left px-2 py-1">Disaggregations</th>
@@ -665,6 +707,9 @@ type TabKey = 'submissions' | 'forms' | 'narratives'
                            <tbody>
                              {(submission.values || []).map((value) => (
                                <tr key={value.id} className="border-t border-border">
+                                 {hasInputValues(submission.values) && (
+                                   <td className="px-2 py-1">{value.input?.name || '-'}</td>
+                                 )}
                                  <td className="px-2 py-1">{value.valueNumber ?? value.valueText ?? '-'}</td>
                                  <td className="px-2 py-1">{value.isEstimated ? 'Yes' : 'No'}</td>
                                  <td className="px-2 py-1">
@@ -687,6 +732,28 @@ type TabKey = 'submissions' | 'forms' | 'narratives'
          </div>
       ) : activeTab === 'forms' ? (
         <div className="space-y-3">
+          {filteredFormResponses.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 justify-between rounded-lg border border-border bg-muted/20 p-3">
+              <p className="text-sm text-muted-foreground">
+                Create draft submissions from the form responses below so you can submit and approve them in System & Imports.
+              </p>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleConvertToSubmissions}
+                disabled={convertLoading || filteredFormResponses.length === 0}
+              >
+                {convertLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Creating…
+                  </>
+                ) : (
+                  'Create submissions from form responses'
+                )}
+              </Button>
+            </div>
+          )}
           {filteredFormResponses.length === 0 ? (
             <div className="text-center text-muted-foreground border border-dashed border-border rounded-lg p-6">
               No public form responses yet.
@@ -709,25 +776,49 @@ type TabKey = 'submissions' | 'forms' | 'narratives'
                       {new Date(response.createdAt).toLocaleString()}
                     </span>
                   </div>
-                  <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                    <div>
-                      <span className="text-muted-foreground">Value:</span>{' '}
-                      {response.valueNumber ?? response.valueText ?? '-'}
+                  {response.values && response.values.length > 0 ? (
+                    <div className="mt-3 space-y-2 text-xs">
+                      {response.values.map((value) => (
+                        <div key={value.id} className="border border-border rounded p-2 bg-muted/20">
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium">{value.input?.name || 'Input'}</span>
+                            <span className="text-muted-foreground">
+                              {value.valueNumber ?? value.valueText ?? '-'}
+                            </span>
+                          </div>
+                          <div className="text-muted-foreground mt-1 flex flex-wrap gap-2">
+                            <span>Estimated: {value.isEstimated ? 'Yes' : 'No'}</span>
+                            <span>
+                              Disaggregations: {(value.disaggregationValues || []).length === 0
+                                ? '-'
+                                : value.disaggregationValues?.join(', ')}
+                            </span>
+                            {value.notes && <span>Notes: {value.notes}</span>}
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                    <div>
-                      <span className="text-muted-foreground">Estimated:</span>{' '}
-                      {response.isEstimated ? 'Yes' : 'No'}
-                    </div>
-                    <div className="sm:col-span-2">
-                      <span className="text-muted-foreground">Disaggregations:</span>{' '}
-                      {(response.disaggregationValues || []).length === 0 ? '-' : response.disaggregationValues?.join(', ')}
-                    </div>
-                    {response.notes && (
-                      <div className="sm:col-span-2">
-                        <span className="text-muted-foreground">Notes:</span> {response.notes}
+                  ) : (
+                    <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <span className="text-muted-foreground">Value:</span>{' '}
+                        {response.valueNumber ?? response.valueText ?? '-'}
                       </div>
-                    )}
-                  </div>
+                      <div>
+                        <span className="text-muted-foreground">Estimated:</span>{' '}
+                        {response.isEstimated ? 'Yes' : 'No'}
+                      </div>
+                      <div className="sm:col-span-2">
+                        <span className="text-muted-foreground">Disaggregations:</span>{' '}
+                        {(response.disaggregationValues || []).length === 0 ? '-' : response.disaggregationValues?.join(', ')}
+                      </div>
+                      {response.notes && (
+                        <div className="sm:col-span-2">
+                          <span className="text-muted-foreground">Notes:</span> {response.notes}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )
             })

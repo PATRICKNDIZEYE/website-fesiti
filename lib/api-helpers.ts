@@ -191,7 +191,7 @@ export const indicatorSchedulesApi = {
    */
   create: (orgId: string, data: {
     indicatorId: string
-    frequency: 'monthly' | 'quarterly' | 'annual' | 'custom'
+    frequency: 'monthly' | 'quarterly' | 'termly' | 'annual' | 'custom'
     calendarType?: 'gregorian' | 'fiscal'
     fiscalYearStartMonth?: number
     dueDaysAfterPeriodEnd?: number
@@ -217,6 +217,27 @@ export const indicatorTargetsApi = {
 }
 
 /**
+ * Indicator inputs (for formula indicators)
+ */
+export const indicatorInputsApi = {
+  list: (orgId: string, indicatorId: string) =>
+    orgApi.get(orgId, `indicators/${indicatorId}/inputs`),
+  create: (orgId: string, indicatorId: string, data: {
+    name: string
+    code?: string
+    inputType: 'value' | 'numerator' | 'denominator'
+    unitId?: string
+    description?: string
+    isRequired?: boolean
+    disaggregationDefIds?: string[]
+  }) => orgApi.post(orgId, `indicators/${indicatorId}/inputs`, data),
+  update: (orgId: string, inputId: string, data: { name?: string; code?: string; inputType?: string; unitId?: string; description?: string; isRequired?: boolean }) =>
+    orgApi.patch(orgId, `indicators/inputs/${inputId}`, data),
+  delete: (orgId: string, inputId: string) =>
+    orgApi.delete(orgId, `indicators/inputs/${inputId}`),
+}
+
+/**
  * Disaggregation API helpers
  */
 export const disaggregationsApi = {
@@ -231,7 +252,7 @@ export const disaggregationsApi = {
   listValues: (orgId: string, defId: string) =>
     orgApi.get(orgId, `disaggregations/definitions/${defId}/values`),
   
-  addValue: (orgId: string, data: { disaggregationDefId: string; valueLabel: string; valueCode?: string; sortOrder?: number }) =>
+  addValue: (orgId: string, data: { disaggregationDefId: string; valueLabel: string; valueCode?: string; sortOrder?: number; locationId?: string }) =>
     orgApi.post(orgId, 'disaggregations/values', data),
   
   // Indicator-Disaggregation linking
@@ -246,6 +267,14 @@ export const disaggregationsApi = {
   
   removeFromIndicator: (orgId: string, indicatorId: string, defId: string) =>
     orgApi.delete(orgId, `indicators/${indicatorId}/disaggregations/${defId}`),
+}
+
+/**
+ * Locations (for linking to disaggregation values or sites; have lat/lng)
+ */
+export const locationsApi = {
+  list: (orgId: string) => orgApi.get(orgId, `locations?orgId=${orgId}`),
+  get: (orgId: string, id: string) => orgApi.get(orgId, `locations/${id}`),
 }
 
 /**
@@ -292,6 +321,13 @@ export const dataCollectionApi = {
   
   deleteLink: (orgId: string, linkId: string) =>
     orgApi.delete(orgId, `data-collection/links/${linkId}`),
+
+  /**
+   * Convert form responses into draft submissions so they can be submitted and approved.
+   * Returns { created, submissionIds }.
+   */
+  convertToSubmissions: (orgId: string, formResponseIds: string[]) =>
+    orgApi.post(orgId, 'data-collection/convert-to-submissions', { formResponseIds }),
 }
 
 /**
@@ -323,5 +359,48 @@ export const importHistoryApi = {
   
   delete: (orgId: string, importId: string) =>
     orgApi.delete(orgId, `import-history/${importId}`),
+}
+
+/**
+ * Results nodes (project objectives / outcomes) API helpers
+ */
+export const resultsNodesApi = {
+  list: (orgId: string, projectId?: string) => {
+    const query = projectId ? `?projectId=${projectId}` : ''
+    return orgApi.get(orgId, `results-nodes${query}`)
+  },
+  get: (orgId: string, id: string) => orgApi.get(orgId, `results-nodes/${id}`),
+  create: (orgId: string, data: {
+    projectId: string
+    parentId?: string
+    nodeType: 'outcome' | 'output'
+    title: string
+    code?: string
+    description?: string
+    sortOrder?: number
+  }) => orgApi.post(orgId, 'results-nodes', data),
+  update: (orgId: string, id: string, data: {
+    parentId?: string
+    nodeType?: 'outcome' | 'output'
+    title?: string
+    code?: string
+    description?: string
+    sortOrder?: number
+  }) => orgApi.patch(orgId, `results-nodes/${id}`, data),
+  delete: (orgId: string, id: string) => orgApi.delete(orgId, `results-nodes/${id}`),
+}
+
+/**
+ * Reports API helpers (PITT = Performance Indicator Tracking Table)
+ */
+export const reportsApi = {
+  getPitt: (orgId: string, projectId: string) =>
+    orgApi.get(orgId, `reports/pitt/${projectId}`),
+
+  /** Get indicator progress: aggregated submissions vs targets (formula applied for formula indicators) */
+  getIndicatorProgress: (orgId: string, indicatorId: string, periodId?: string) => {
+    const query = periodId ? `?periodId=${periodId}` : ''
+    return orgApi.get(orgId, `reports/indicator-progress/${indicatorId}${query}`)
+  },
 }
 

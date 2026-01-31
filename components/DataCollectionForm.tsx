@@ -7,12 +7,12 @@ import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertCircle, Loader2, Save, Send, Download, Upload, Check, X, FileSpreadsheet, History } from 'lucide-react'
 import { orgApi, importHistoryApi } from '@/lib/api-helpers'
-import { Indicator, IndicatorPeriod, DisaggregationDef, DisaggregationValue, Unit } from '@/lib/types'
+import { Indicator, IndicatorInput, IndicatorPeriod, DisaggregationDef, DisaggregationValue, Unit } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { ConfirmationModal } from '@/components/ConfirmationModal'
 import { ExcelImportModal } from '@/components/ExcelImportModal'
 import { ImportHistoryView } from '@/components/ImportHistoryView'
-import { exportDataTemplate, importDataFromExcel, generateDisaggCombinations, getCombinationKey } from '@/lib/excel-utils'
+import { exportDataTemplate, importDataFromExcel, generateDisaggCombinations, getCombinationKey, getInputCombinationKey } from '@/lib/excel-utils'
 
 interface DataCollectionFormProps {
   indicatorId: string
@@ -77,7 +77,7 @@ export function DataCollectionForm({
     mappings: Record<string, string>
   } | null>(null)
   const [pendingImportRows, setPendingImportRows] = useState<
-    { value: number; disaggregationValueIds?: string[]; isEstimated?: boolean; notes?: string }[]
+    { inputId?: string; value: number; disaggregationValueIds?: string[]; isEstimated?: boolean; notes?: string }[]
   >([])
   const fileInputRef = useRef<HTMLInputElement>(null)
   
@@ -88,6 +88,27 @@ export function DataCollectionForm({
       .map(d => d.definition)
       .filter((d): d is DisaggregationDef => !!d && !!d.values && d.values.length > 0)
   }, [indicator])
+
+  const inputs = useMemo(() => {
+    return indicator?.inputs && indicator.inputs.length > 0 ? indicator.inputs : []
+  }, [indicator])
+
+  const isFormula = indicator?.calcType === 'formula' && inputs.length > 0
+
+  const getInputDisaggregations = (input: IndicatorInput): DisaggregationDef[] => {
+    return (input.disaggregations || [])
+      .map(d => d.definition)
+      .filter((d): d is DisaggregationDef => !!d && !!d.values && d.values.length > 0)
+  }
+
+  const inputCombinations = useMemo(() => {
+    const combos: Record<string, DisaggregationValue[][]> = {}
+    for (const input of inputs) {
+      const disaggs = getInputDisaggregations(input)
+      combos[input.id] = generateDisaggCombinations(disaggs)
+    }
+    return combos
+  }, [inputs])
   
   // Generate all combinations
   const combinations = useMemo(() => {
@@ -97,6 +118,14 @@ export function DataCollectionForm({
   // Helper to get unit display
   const getUnitDisplay = () => {
     const unit = indicator?.unit as string | Unit | null
+    if (unit && typeof unit === 'object') {
+      return unit.symbol || unit.name || 'unit'
+    }
+    return unit || 'unit'
+  }
+
+  const getInputUnitDisplay = (input: IndicatorInput) => {
+    const unit = input.unit as string | Unit | null | undefined
     if (unit && typeof unit === 'object') {
       return unit.symbol || unit.name || 'unit'
     }
@@ -114,26 +143,52 @@ export function DataCollectionForm({
     const cols = [
       { key: 'rowKey', label: 'Row Key', required: false, description: 'Unique identifier for updating existing rows' },
     ]
-    
-    // Add disaggregation columns
-    for (const disagg of disaggregations) {
+
+    if (isFormula) {
       cols.push({
-        key: `disagg_${disagg.id}`,
-        label: disagg.name,
+        key: 'input',
+        label: 'Input',
         required: true,
-        description: `Values: ${disagg.values?.map(v => v.valueLabel).join(', ')}`,
+        description: `Input name (e.g., ${inputs.map(i => i.name).slice(0, 3).join(', ')})`,
       })
+
+      const disaggMap = new Map<string, DisaggregationDef>()
+      for (const input of inputs) {
+        for (const disagg of getInputDisaggregations(input)) {
+          if (!disaggMap.has(disagg.id)) {
+            disaggMap.set(disagg.id, disagg)
+          }
+        }
+      }
+      for (const disagg of disaggMap.values()) {
+        cols.push({
+          key: `disagg_${disagg.id}`,
+          label: disagg.name,
+          required: false,
+          description: `Values: ${disagg.values?.map(v => v.valueLabel).join(', ')}`,
+        })
+      }
+    } else {
+      // Add disaggregation columns
+      for (const disagg of disaggregations) {
+        cols.push({
+          key: `disagg_${disagg.id}`,
+          label: disagg.name,
+          required: true,
+          description: `Values: ${disagg.values?.map(v => v.valueLabel).join(', ')}`,
+        })
+      }
     }
     
     // Add value columns
     cols.push(
-      { key: 'value', label: 'Value', required: true, description: `Numeric value in ${unitDisplay}` },
+      { key: 'value', label: 'Value', required: true, description: isFormula ? 'Numeric value' : `Numeric value in ${unitDisplay}` },
       { key: 'isEstimated', label: 'Is Estimated', required: false, description: 'TRUE/FALSE' },
       { key: 'notes', label: 'Notes', required: false, description: 'Additional notes' },
     )
     
     return cols
-  }, [disaggregations, indicator])
+  }, [disaggregations, indicator, inputs, isFormula])
 
   useEffect(() => {
     fetchData()
@@ -173,15 +228,24 @@ export function DataCollectionForm({
   }
 
   const handleExportTemplate = () => {
-    if (!indicator || !period) return
-    
-    exportDataTemplate({
-      indicator,
-      period,
-      disaggregations,
-      combinations,
-      values,
-    })
+    if (!indicator || !period) {
+      setError('Select an indicator and period to export a template.')
+      return
+    }
+    try {
+      setError('')
+      exportDataTemplate({
+        indicator,
+        period,
+        disaggregations,
+        combinations,
+        values,
+      })
+      setSuccess('Template downloaded. Fill in the sheet and use Import Data to upload.')
+    } catch (err: any) {
+      setError(err?.message || 'Failed to export template. Try again or use a different browser.')
+      setSuccess('')
+    }
   }
 
   const handleImportClick = () => {
@@ -195,52 +259,92 @@ export function DataCollectionForm({
       setSuccess('')
 
       const newValues: Record<string, CellValue> = {}
-      const rowsForBackend: { value: number; disaggregationValueIds?: string[]; isEstimated?: boolean; notes?: string }[] = []
-      
+      const rowsForBackend: { inputId?: string; value: number; disaggregationValueIds?: string[]; isEstimated?: boolean; notes?: string }[] = []
+
+      const inputByName = new Map(inputs.map(i => [i.name.toLowerCase(), i]))
+
       for (const row of data) {
         const value = row.value
         if (value === undefined || value === null || value === '') continue
 
-        // Build the combination key from disaggregation values
-        let key = 'total'
-        
-        let disaggregationValueIds: string[] | undefined
+        if (isFormula) {
+          const inputName = String(row.input || '').trim()
+          const input = inputByName.get(inputName.toLowerCase())
+          if (!input) continue
 
-        if (disaggregations.length > 0) {
+          const inputDisaggs = getInputDisaggregations(input)
           const matchedValues: DisaggregationValue[] = []
-          
-          for (const disagg of disaggregations) {
+          for (const disagg of inputDisaggs) {
             const disaggColValue = row[`disagg_${disagg.id}`]
             if (!disaggColValue) continue
-            
-            // Find matching value by label
-            const matchedValue = disagg.values?.find(v => 
+            const matchedValue = disagg.values?.find(v =>
               v.valueLabel.toLowerCase() === String(disaggColValue).toLowerCase()
             )
             if (matchedValue) {
               matchedValues.push(matchedValue)
             }
           }
-          
-          if (matchedValues.length === disaggregations.length) {
-            key = getCombinationKey(matchedValues)
-            disaggregationValueIds = matchedValues.map(v => v.id)
+          if (inputDisaggs.length > 0 && matchedValues.length !== inputDisaggs.length) {
+            continue
           }
-        }
 
-        newValues[key] = {
-          value: String(value),
-          isEstimated: row.isEstimated === true || String(row.isEstimated).toLowerCase() === 'true',
-          notes: row.notes || '',
-        }
+          const valueKey = getInputCombinationKey(input.id, matchedValues)
 
-        // Prepare row payload for backend import processing
-        rowsForBackend.push({
-          value: Number(value),
-          disaggregationValueIds,
-          isEstimated: row.isEstimated === true || String(row.isEstimated).toLowerCase() === 'true',
-          notes: row.notes || '',
-        })
+          newValues[valueKey] = {
+            value: String(value),
+            isEstimated: row.isEstimated === true || String(row.isEstimated).toLowerCase() === 'true',
+            notes: row.notes || '',
+          }
+
+          rowsForBackend.push({
+            inputId: input.id,
+            value: Number(value),
+            disaggregationValueIds: matchedValues.length ? matchedValues.map(v => v.id) : undefined,
+            isEstimated: row.isEstimated === true || String(row.isEstimated).toLowerCase() === 'true',
+            notes: row.notes || '',
+          })
+        } else {
+          // Build the combination key from disaggregation values
+          let key = 'total'
+          
+          let disaggregationValueIds: string[] | undefined
+
+          if (disaggregations.length > 0) {
+            const matchedValues: DisaggregationValue[] = []
+            
+            for (const disagg of disaggregations) {
+              const disaggColValue = row[`disagg_${disagg.id}`]
+              if (!disaggColValue) continue
+              
+              // Find matching value by label
+              const matchedValue = disagg.values?.find(v => 
+                v.valueLabel.toLowerCase() === String(disaggColValue).toLowerCase()
+              )
+              if (matchedValue) {
+                matchedValues.push(matchedValue)
+              }
+            }
+            
+            if (matchedValues.length === disaggregations.length) {
+              key = getCombinationKey(matchedValues)
+              disaggregationValueIds = matchedValues.map(v => v.id)
+            }
+          }
+
+          newValues[key] = {
+            value: String(value),
+            isEstimated: row.isEstimated === true || String(row.isEstimated).toLowerCase() === 'true',
+            notes: row.notes || '',
+          }
+
+          // Prepare row payload for backend import processing
+          rowsForBackend.push({
+            value: Number(value),
+            disaggregationValueIds,
+            isEstimated: row.isEstimated === true || String(row.isEstimated).toLowerCase() === 'true',
+            notes: row.notes || '',
+          })
+        }
       }
 
       setValues(newValues)
@@ -288,7 +392,44 @@ export function DataCollectionForm({
       // The import uses label-based keys, we need to convert to ID-based keys
       const newValues: Record<string, CellValue> = {}
       
-      if (disaggregations.length === 0) {
+      if (result.calcType === 'formula') {
+        const inputById = new Map(inputs.map(i => [i.id, i]))
+        const inputByName = new Map(inputs.map(i => [i.name.toLowerCase(), i]))
+
+        for (const row of result.rows || []) {
+          const inputId = row.inputId || inputByName.get(String(row.inputName || '').toLowerCase())?.id
+          if (!inputId) continue
+
+          const input = inputById.get(inputId)
+          if (!input) continue
+
+          const inputDisaggs = getInputDisaggregations(input)
+          const matchedValues: DisaggregationValue[] = []
+          const rowDisaggs = row.disaggregations || {}
+
+          for (const disagg of inputDisaggs) {
+            const label = rowDisaggs[disagg.name]
+            if (!label) continue
+            const matchedValue = disagg.values?.find(v =>
+              v.valueLabel.toLowerCase() === String(label).toLowerCase()
+            )
+            if (matchedValue) {
+              matchedValues.push(matchedValue)
+            }
+          }
+
+          if (inputDisaggs.length > 0 && matchedValues.length !== inputDisaggs.length) {
+            continue
+          }
+
+          const key = getInputCombinationKey(inputId, matchedValues)
+          newValues[key] = {
+            value: String(row.value || ''),
+            isEstimated: row.isEstimated === true || String(row.isEstimated).toLowerCase() === 'yes',
+            notes: row.notes || '',
+          }
+        }
+      } else if (disaggregations.length === 0) {
         // Simple case
         if (result.values['total']) {
           newValues['total'] = result.values['total']
@@ -364,30 +505,62 @@ export function DataCollectionForm({
           setSuccess('Draft saved, but import processing failed. Check import history for details.')
         }
       } else {
-        // Manual entry path: add values for each combination
-        for (const combination of combinations) {
-          const key = combination.length > 0 ? getCombinationKey(combination) : 'total'
-          const cellValue = values[key]
-          
-          if (cellValue && cellValue.value) {
-            if (combination.length === 0) {
-              // No disaggregation - single total value
-              await orgApi.post(orgId, `submissions/${submissionId}/values`, {
-                indicatorId,
-                valueNumber: parseFloat(cellValue.value),
-                isEstimated: cellValue.isEstimated,
-                notes: cellValue.notes || undefined,
-              })
-            } else {
-              // With disaggregation - one value per combination
-              for (const disaggValue of combination) {
+        if (isFormula) {
+          for (const input of inputs) {
+            const combos = inputCombinations[input.id] || [[]]
+            for (const combination of combos) {
+              const key = getInputCombinationKey(input.id, combination)
+              const cellValue = values[key]
+              if (!cellValue || !cellValue.value) continue
+
+              if (combination.length === 0) {
                 await orgApi.post(orgId, `submissions/${submissionId}/values`, {
                   indicatorId,
-                  disaggregationValueId: disaggValue.id,
-                  valueNumber: parseFloat(cellValue.value) / combination.length,
+                  inputId: input.id,
+                  valueNumber: parseFloat(cellValue.value),
                   isEstimated: cellValue.isEstimated,
                   notes: cellValue.notes || undefined,
                 })
+              } else {
+                for (const disaggValue of combination) {
+                  await orgApi.post(orgId, `submissions/${submissionId}/values`, {
+                    indicatorId,
+                    inputId: input.id,
+                    disaggregationValueId: disaggValue.id,
+                    valueNumber: parseFloat(cellValue.value) / combination.length,
+                    isEstimated: cellValue.isEstimated,
+                    notes: cellValue.notes || undefined,
+                  })
+                }
+              }
+            }
+          }
+        } else {
+          // Manual entry path: add values for each combination
+          for (const combination of combinations) {
+            const key = combination.length > 0 ? getCombinationKey(combination) : 'total'
+            const cellValue = values[key]
+            
+            if (cellValue && cellValue.value) {
+              if (combination.length === 0) {
+                // No disaggregation - single total value
+                await orgApi.post(orgId, `submissions/${submissionId}/values`, {
+                  indicatorId,
+                  valueNumber: parseFloat(cellValue.value),
+                  isEstimated: cellValue.isEstimated,
+                  notes: cellValue.notes || undefined,
+                })
+              } else {
+                // With disaggregation - one value per combination
+                for (const disaggValue of combination) {
+                  await orgApi.post(orgId, `submissions/${submissionId}/values`, {
+                    indicatorId,
+                    disaggregationValueId: disaggValue.id,
+                    valueNumber: parseFloat(cellValue.value) / combination.length,
+                    isEstimated: cellValue.isEstimated,
+                    notes: cellValue.notes || undefined,
+                  })
+                }
               }
             }
           }
@@ -452,7 +625,7 @@ export function DataCollectionForm({
     )
   }
 
-  const hasDisaggregations = disaggregations.length > 0
+  const hasDisaggregations = !isFormula && disaggregations.length > 0
 
   return (
     <div className="space-y-6">
@@ -528,7 +701,110 @@ export function DataCollectionForm({
         </div>
 
         <div className="p-4">
-          {!hasDisaggregations ? (
+          {isFormula ? (
+            <div className="space-y-6">
+              {inputs.map((input) => {
+                const inputDisaggs = getInputDisaggregations(input)
+                const inputCombos = inputCombinations[input.id] || [[]]
+                const hasInputDisaggs = inputDisaggs.length > 0
+                return (
+                  <div key={input.id} className="border border-border rounded-lg overflow-hidden">
+                    <div className="p-3 bg-muted/30 flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-foreground">{input.name}</p>
+                        <p className="text-xs text-muted-foreground">Unit: {getInputUnitDisplay(input)}</p>
+                      </div>
+                    </div>
+                    <div className="p-3">
+                      {!hasInputDisaggs ? (
+                        <div className="max-w-md space-y-3">
+                          <div className="space-y-2">
+                            <Label className="text-foreground">Value ({getInputUnitDisplay(input)}) *</Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={values[getInputCombinationKey(input.id, [])]?.value || ''}
+                              onChange={(e) => updateValue(getInputCombinationKey(input.id, []), 'value', e.target.value)}
+                              placeholder="Enter value..."
+                              className="bg-background border-border"
+                            />
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={values[getInputCombinationKey(input.id, [])]?.isEstimated || false}
+                                onChange={(e) => updateValue(getInputCombinationKey(input.id, []), 'isEstimated', e.target.checked)}
+                                className="rounded border-border"
+                              />
+                              <span className="text-sm text-muted-foreground">This is an estimate</span>
+                            </label>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="w-full border-collapse">
+                            <thead>
+                              <tr className="bg-muted/50">
+                                {inputDisaggs.map((d) => (
+                                  <th key={d.id} className="px-3 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider border-b border-border">
+                                    {d.name}
+                                  </th>
+                                ))}
+                                <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider border-b border-border">
+                                  Value ({getInputUnitDisplay(input)})
+                                </th>
+                                <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider border-b border-border w-20">
+                                  Est.
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {inputCombos.map((combination, rowIndex) => {
+                                const key = getInputCombinationKey(input.id, combination)
+                                const cellValue = values[key] || { value: '', isEstimated: false, notes: '' }
+                                return (
+                                  <tr key={key} className={cn(
+                                    "hover:bg-muted/30 transition-colors",
+                                    rowIndex % 2 === 0 ? 'bg-background' : 'bg-muted/10'
+                                  )}>
+                                    {combination.map((value) => (
+                                      <td key={value.id} className="px-3 py-2 text-sm text-foreground border-b border-border/50">
+                                        {value.valueLabel}
+                                      </td>
+                                    ))}
+                                    <td className="px-3 py-2 border-b border-border/50">
+                                      <Input
+                                        type="number"
+                                        step="0.01"
+                                        value={cellValue.value}
+                                        onChange={(e) => updateValue(key, 'value', e.target.value)}
+                                        placeholder="0"
+                                        className="bg-background border-border h-8 w-32"
+                                      />
+                                    </td>
+                                    <td className="px-3 py-2 border-b border-border/50 text-center">
+                                      <input
+                                        type="checkbox"
+                                        checked={cellValue.isEstimated}
+                                        onChange={(e) => updateValue(key, 'isEstimated', e.target.checked)}
+                                        className="rounded border-border"
+                                        title="Mark as estimate"
+                                      />
+                                    </td>
+                                  </tr>
+                                )
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : !hasDisaggregations ? (
             // Simple single value entry
             <div className="max-w-md space-y-4">
               <div className="space-y-2">
@@ -570,7 +846,7 @@ export function DataCollectionForm({
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-muted/50">
-                    {disaggregations.map((d, i) => (
+                    {disaggregations.map((d) => (
                       <th key={d.id} className="px-3 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider border-b border-border">
                         {d.name}
                       </th>
@@ -593,7 +869,7 @@ export function DataCollectionForm({
                         "hover:bg-muted/30 transition-colors",
                         rowIndex % 2 === 0 ? 'bg-background' : 'bg-muted/10'
                       )}>
-                        {combination.map((value, colIndex) => (
+                        {combination.map((value) => (
                           <td key={value.id} className="px-3 py-2 text-sm text-foreground border-b border-border/50">
                             {value.valueLabel}
                           </td>
